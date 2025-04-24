@@ -7,12 +7,12 @@ import { Repository } from 'typeorm';
 export class RolesService {
   constructor(
     @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
+    private rolesRepository: Repository<Role>,
   ) {}
 
   async findAll(): Promise<Role[]> {
     try {
-      return await this.roleRepository.find();
+      return await this.rolesRepository.find();
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
