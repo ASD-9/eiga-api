@@ -2,9 +2,15 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolesModule } from './roles/roles.module';
+import { AvatarsModule } from './avatars/avatars.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'public'),
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'mysql',
@@ -22,6 +28,7 @@ import { RolesModule } from './roles/roles.module';
       },
     }),
     RolesModule,
+    AvatarsModule,
   ],
   controllers: [],
   providers: [],
