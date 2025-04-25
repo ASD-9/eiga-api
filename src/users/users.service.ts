@@ -55,6 +55,21 @@ export class UsersService {
     }
   }
 
+  async findOneById(id: number): Promise<User> {
+    try {
+      const user = await this.usersRepository.findOneBy({ id });
+      if (!user) {
+        throw new NotFoundException(`Utilisateur ${id} introuvable`);
+      }
+      return user;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateUserDto: UpdateUserDto): Promise<void> {
     try {
       const { role_id, ...updateData }: Partial<User> = { ...updateUserDto };
