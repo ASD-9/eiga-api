@@ -24,6 +24,7 @@ const mockData = {
     users: [],
   },
   role_id: 1,
+  profils: [],
 };
 
 const mockData2 = {
@@ -36,6 +37,7 @@ const mockData2 = {
     users: [],
   },
   role_id: 2,
+  profils: [],
 };
 
 describe('UsersService', () => {

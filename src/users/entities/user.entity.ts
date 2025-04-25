@@ -5,8 +5,10 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Profil } from '../../profils/entities/profil.entity';
 
 @Entity('Users')
 export class User {
@@ -26,4 +28,8 @@ export class User {
 
   @Exclude()
   role_id: number;
+
+  @OneToMany(() => Profil, (profil) => profil.user)
+  @Exclude()
+  profils: Profil[];
 }
