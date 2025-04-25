@@ -72,7 +72,7 @@ describe('RolesService', () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
 
       await expect(service.findOneById(id)).rejects.toThrow(
-        new NotFoundException(`Role ${id} introuvable`),
+        new NotFoundException(`Rôle ${id} introuvable`),
       );
     });
 

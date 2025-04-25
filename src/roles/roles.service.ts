@@ -28,7 +28,7 @@ export class RolesService {
     try {
       const role = await this.rolesRepository.findOneBy({ id });
       if (!role) {
-        throw new NotFoundException(`Role ${id} introuvable`);
+        throw new NotFoundException(`Rôle ${id} introuvable`);
       }
       return role;
     } catch (error) {
