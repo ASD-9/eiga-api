@@ -5,6 +5,7 @@ import { RolesModule } from './roles/roles.module';
 import { AvatarsModule } from './avatars/avatars.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { join } from 'path';
     }),
     RolesModule,
     AvatarsModule,
+    UsersModule,
   ],
   controllers: [],
   providers: [],
