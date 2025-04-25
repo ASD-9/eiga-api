@@ -80,7 +80,9 @@ describe('Avatars', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({ ...mockData, profils: [] });
 
       const createAvatarDto = { name: 'avatar1' };
 
@@ -89,7 +91,7 @@ describe('Avatars', () => {
         .attach('image', testFilePath)
         .field(createAvatarDto)
         .expect(201)
-        .expect(mockData)
+        .expect({ ...mockData, profils: [] })
         .then(() => {
           fs.unlinkSync(testFilePath);
         });
@@ -177,7 +179,10 @@ describe('Avatars', () => {
 
   describe('/avatars (GET)', () => {
     it('should return all avatars with status 200', () => {
-      const result = [mockData, mockData2];
+      const result = [
+        { ...mockData, profils: [] },
+        { ...mockData2, profils: [] },
+      ];
       jest.spyOn(repository, 'find').mockResolvedValue(result);
 
       return request(app.getHttpServer() as App)

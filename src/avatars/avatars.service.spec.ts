@@ -12,12 +12,14 @@ const mockData = {
   id: 1,
   name: 'avatar1',
   image_name: 'avatar1.jpg',
+  profils: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'avatar2',
   image_name: 'avatar2.jpg',
+  profils: [],
 };
 
 describe('AvatarsService', () => {
