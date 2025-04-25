@@ -87,6 +87,22 @@ describe('UsersService', () => {
       expect(await service.create(createUserDto)).toEqual(mockData);
     });
 
+    it('should throw NotFoundException if the role is not found', async () => {
+      const createUserDto = {
+        username: 'user1',
+        password: 'password1',
+        role_id: 99,
+      };
+
+      jest
+        .spyOn(rolesService, 'findOneById')
+        .mockRejectedValue(new NotFoundException('Rôle 99 introuvable'));
+
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        new NotFoundException('Rôle 99 introuvable'),
+      );
+    });
+
     it("should throw InternalServerErrorException if there's an error", async () => {
       const createUserDto = {
         username: 'user1',
