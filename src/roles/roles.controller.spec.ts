@@ -7,11 +7,13 @@ import { Role } from './entities/role.entity';
 const mockData = {
   id: 1,
   name: 'Super Admin',
+  users: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'Admin',
+  users: [],
 };
 
 describe('RolesController', () => {
