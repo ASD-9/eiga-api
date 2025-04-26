@@ -10,6 +10,7 @@ import { ProfilsModule } from './profils/profils.module';
 import { SagasModule } from './sagas/sagas.module';
 import { CategoriesModule } from './categories/categories.module';
 import { NationalitiesModule } from './nationalities/nationalities.module';
+import { JobsModule } from './jobs/jobs.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { NationalitiesModule } from './nationalities/nationalities.module';
     SagasModule,
     CategoriesModule,
     NationalitiesModule,
+    JobsModule,
   ],
   controllers: [],
   providers: [],
