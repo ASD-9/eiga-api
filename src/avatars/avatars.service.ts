@@ -38,6 +38,21 @@ export class AvatarsService {
     }
   }
 
+  async findOneById(id: number): Promise<Avatar> {
+    try {
+      const avatar = await this.avatarsRepository.findOneBy({ id });
+      if (!avatar) {
+        throw new NotFoundException(`Avatar ${id} introuvable`);
+      }
+      return avatar;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateAvatarDto: AvatarDto): Promise<void> {
     try {
       const result: UpdateResult = await this.avatarsRepository.update(

@@ -24,6 +24,7 @@ const mockData = {
     users: [],
   },
   role_id: 1,
+  profils: [],
 };
 
 const mockData2 = {
@@ -36,6 +37,7 @@ const mockData2 = {
     users: [],
   },
   role_id: 2,
+  profils: [],
 };
 
 describe('UsersService', () => {
@@ -52,6 +54,7 @@ describe('UsersService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
           },
@@ -84,6 +87,22 @@ describe('UsersService', () => {
       expect(await service.create(createUserDto)).toEqual(mockData);
     });
 
+    it('should throw NotFoundException if the role is not found', async () => {
+      const createUserDto = {
+        username: 'user1',
+        password: 'password1',
+        role_id: 99,
+      };
+
+      jest
+        .spyOn(rolesService, 'findOneById')
+        .mockRejectedValue(new NotFoundException('Rôle 99 introuvable'));
+
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        new NotFoundException('Rôle 99 introuvable'),
+      );
+    });
+
     it("should throw InternalServerErrorException if there's an error", async () => {
       const createUserDto = {
         username: 'user1',
@@ -112,6 +131,33 @@ describe('UsersService', () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
       await expect(service.findAll()).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return the user with the given id', async () => {
+      const id = 1;
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+
+      expect(await service.findOneById(id)).toEqual(mockData);
+    });
+
+    it('should throw NotFoundException if the user is not found', async () => {
+      const id = 99;
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      await expect(service.findOneById(id)).rejects.toThrow(
+        new NotFoundException(`Utilisateur ${id} introuvable`),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      const id = 1;
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+
+      await expect(service.findOneById(id)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });

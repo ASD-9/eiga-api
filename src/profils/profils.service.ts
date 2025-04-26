@@ -1,0 +1,103 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { CreateProfilDto } from './dto/create-profil.dto';
+import { UpdateProfilDto } from './dto/update-profil.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Profil } from './entities/profil.entity';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { Avatar } from '../avatars/entities/avatar.entity';
+import { AvatarsService } from '../avatars/avatars.service';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
+
+@Injectable()
+export class ProfilsService {
+  constructor(
+    @InjectRepository(Profil)
+    private profilsRepository: Repository<Profil>,
+    private avatarsService: AvatarsService,
+    private usersService: UsersService,
+  ) {}
+
+  async create(createProfilDto: CreateProfilDto): Promise<Profil> {
+    try {
+      const avatar: Avatar = await this.avatarsService.findOneById(
+        createProfilDto.avatar_id,
+      );
+
+      const user: User = await this.usersService.findOneById(
+        createProfilDto.user_id,
+      );
+
+      return await this.profilsRepository.save({
+        ...createProfilDto,
+        avatar,
+        user,
+      });
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async findAllByUser(userId: number): Promise<Profil[]> {
+    try {
+      return await this.profilsRepository.find({
+        where: { user: { id: userId } },
+      });
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async update(id: number, updateProfilDto: UpdateProfilDto): Promise<void> {
+    try {
+      const { avatar_id, user_id, ...updateData }: Partial<Profil> = {
+        ...updateProfilDto,
+      };
+      if (avatar_id) {
+        const avatar: Avatar = await this.avatarsService.findOneById(avatar_id);
+        updateData.avatar = avatar;
+      }
+      if (user_id) {
+        const user: User = await this.usersService.findOneById(user_id);
+        updateData.user = user;
+      }
+
+      const result: UpdateResult = await this.profilsRepository.update(
+        id,
+        updateData,
+      );
+
+      if (result.affected === 0) {
+        throw new NotFoundException(`Profil ${id} introuvable`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async remove(id: number): Promise<void> {
+    try {
+      const result: DeleteResult = await this.profilsRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`Profil ${id} introuvable`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+}
