@@ -1,0 +1,68 @@
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { SagaDto } from './dto/saga.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Saga } from './entities/saga.entity';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+
+@Injectable()
+export class SagasService {
+  constructor(
+    @InjectRepository(Saga)
+    private sagasRepository: Repository<Saga>,
+  ) {}
+
+  async create(createSagasDto: SagaDto): Promise<Saga> {
+    try {
+      return await this.sagasRepository.save(createSagasDto);
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async findAll(): Promise<Saga[]> {
+    try {
+      return await this.sagasRepository.find();
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async update(id: number, updateSagasDto: SagaDto): Promise<void> {
+    try {
+      const result: UpdateResult = await this.sagasRepository.update(
+        id,
+        updateSagasDto,
+      );
+      if (result.affected === 0) {
+        throw new NotFoundException(`Saga ${id} introuvable`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async remove(id: number): Promise<void> {
+    try {
+      const result: DeleteResult = await this.sagasRepository.delete(id);
+      if (result.affected === 0) {
+        throw new NotFoundException(`Saga ${id} introuvable`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+}
