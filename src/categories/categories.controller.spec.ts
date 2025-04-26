@@ -36,7 +36,7 @@ describe('CategoriesController', () => {
 
   describe('create', () => {
     it('should return the created category', async () => {
-      const createCategoryDto = { name: 'Saga 1' };
+      const createCategoryDto = { name: 'Category 1' };
       jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createCategoryDto)).toEqual(mockData);
@@ -57,7 +57,7 @@ describe('CategoriesController', () => {
   describe('update', () => {
     it('should return status 204 if the category is successfully updated', async () => {
       const id = 1;
-      const updateCategoryDto = { name: 'Saga 1' };
+      const updateCategoryDto = { name: 'Category 1' };
       jest.spyOn(service, 'update').mockImplementation(() => Promise.resolve());
 
       expect(await controller.update(id, updateCategoryDto)).toBeUndefined();
