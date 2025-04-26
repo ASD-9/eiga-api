@@ -35,7 +35,7 @@ describe('SagasController', () => {
   });
 
   describe('create', () => {
-    it('should return the created user', async () => {
+    it('should return the created saga', async () => {
       const createSagaDto = { name: 'Saga 1' };
       jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
