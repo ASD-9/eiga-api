@@ -38,6 +38,14 @@ export const avatarUploadConfig = {
   fileFilter: fileFilter(['image/jpeg', 'image/png']),
 };
 
+export const artistUploadConfig = {
+  storage: diskStorage({
+    destination: path.join(process.cwd(), 'public', 'artists'),
+    filename: editFileName('artist'),
+  }),
+  fileFilter: fileFilter(['image/jpeg', 'image/png']),
+};
+
 export const movieUploadConfig = {
   storage: diskStorage({
     destination: path.join(process.cwd(), 'public', 'movies'),
