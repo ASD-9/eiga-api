@@ -8,6 +8,7 @@ import { join } from 'path';
 import { UsersModule } from './users/users.module';
 import { ProfilsModule } from './profils/profils.module';
 import { SagasModule } from './sagas/sagas.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { SagasModule } from './sagas/sagas.module';
     UsersModule,
     ProfilsModule,
     SagasModule,
+    CategoriesModule,
   ],
   controllers: [],
   providers: [],
