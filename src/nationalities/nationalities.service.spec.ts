@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CategoriesService } from './categories.service';
+import { NationalitiesService } from './nationalities.service';
 import { DeleteResult, Repository } from 'typeorm';
-import { Category } from './entities/category.entity';
+import { Nationality } from './entities/nationality.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   InternalServerErrorException,
@@ -11,24 +11,24 @@ import { UpdateResult } from 'typeorm';
 
 const mockData = {
   id: 1,
-  name: 'Category 1',
+  name: 'Nationality 1',
 };
 
 const mockData2 = {
   id: 2,
-  name: 'Category 2',
+  name: 'Nationality 2',
 };
 
-describe('CategoriesService', () => {
-  let service: CategoriesService;
-  let repository: Repository<Category>;
+describe('NationalitiesService', () => {
+  let service: NationalitiesService;
+  let repository: Repository<Nationality>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        CategoriesService,
+        NationalitiesService,
         {
-          provide: getRepositoryToken(Category),
+          provide: getRepositoryToken(Nationality),
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
@@ -39,30 +39,32 @@ describe('CategoriesService', () => {
       ],
     }).compile();
 
-    service = module.get<CategoriesService>(CategoriesService);
-    repository = module.get<Repository<Category>>(getRepositoryToken(Category));
+    service = module.get<NationalitiesService>(NationalitiesService);
+    repository = module.get<Repository<Nationality>>(
+      getRepositoryToken(Nationality),
+    );
   });
 
   describe('create', () => {
-    it('should create a new category and return it', async () => {
-      const createCategoryDto = { name: 'Category 1' };
+    it('should create a new nationality and return it', async () => {
+      const createNationalityDto = { name: 'Nationality 1' };
       jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
-      expect(await service.create(createCategoryDto)).toEqual(mockData);
+      expect(await service.create(createNationalityDto)).toEqual(mockData);
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      const createCategoryDto = { name: 'Category 1' };
+      const createNationalityDto = { name: 'Nationality 1' };
       jest.spyOn(repository, 'save').mockRejectedValue(new Error('Error'));
 
-      await expect(service.create(createCategoryDto)).rejects.toThrow(
+      await expect(service.create(createNationalityDto)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
   });
 
   describe('findAll', () => {
-    it('should return an array of categories', async () => {
+    it('should return an array of nationalities', async () => {
       const mockResult = [mockData, mockData2];
       jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
@@ -79,43 +81,43 @@ describe('CategoriesService', () => {
   });
 
   describe('update', () => {
-    it('should update the category with the given id', async () => {
+    it('should update the nationality with the given id', async () => {
       const id = 1;
-      const updateCategoryDto = { name: 'Category 1' };
+      const updateNationalityDto = { name: 'Nationality 1' };
       const mockUpdate = jest
         .spyOn(repository, 'update')
         .mockResolvedValue({ affected: 1 } as UpdateResult);
 
-      await service.update(id, updateCategoryDto);
+      await service.update(id, updateNationalityDto);
 
-      expect(mockUpdate).toHaveBeenCalledWith(id, updateCategoryDto);
+      expect(mockUpdate).toHaveBeenCalledWith(id, updateNationalityDto);
     });
 
-    it('should throw NotFoundException if the category is not found', async () => {
+    it('should throw NotFoundException if the nationality is not found', async () => {
       const id = 99;
-      const updateCategoryDto = { name: 'Category 1' };
+      const updateNationalityDto = { name: 'Nationality 1' };
       jest
         .spyOn(repository, 'update')
         .mockResolvedValue({ affected: 0 } as UpdateResult);
 
-      await expect(service.update(id, updateCategoryDto)).rejects.toThrow(
-        new NotFoundException(`Catégorie ${id} introuvable`),
+      await expect(service.update(id, updateNationalityDto)).rejects.toThrow(
+        new NotFoundException(`Nationalité ${id} introuvable`),
       );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
       const id = 1;
-      const updateCategoryDto = { name: 'Category 1' };
+      const updateNationalityDto = { name: 'Nationality 1' };
       jest.spyOn(repository, 'update').mockRejectedValue(new Error('Error'));
 
-      await expect(service.update(id, updateCategoryDto)).rejects.toThrow(
+      await expect(service.update(id, updateNationalityDto)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
   });
 
   describe('remove', () => {
-    it('should remove the category with the given id', async () => {
+    it('should remove the nationality with the given id', async () => {
       const id = 1;
       const mockDelete = jest
         .spyOn(repository, 'delete')
@@ -126,14 +128,14 @@ describe('CategoriesService', () => {
       expect(mockDelete).toHaveBeenCalledWith(id);
     });
 
-    it('should throw NotFoundException if the category is not found', async () => {
+    it('should throw NotFoundException if the nationality is not found', async () => {
       const id = 99;
       jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 0 } as DeleteResult);
 
       await expect(service.remove(id)).rejects.toThrow(
-        new NotFoundException(`Catégorie ${id} introuvable`),
+        new NotFoundException(`Nationalité ${id} introuvable`),
       );
     });
 

@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { ProfilsModule } from './profils/profils.module';
 import { SagasModule } from './sagas/sagas.module';
 import { CategoriesModule } from './categories/categories.module';
+import { NationalitiesModule } from './nationalities/nationalities.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CategoriesModule } from './categories/categories.module';
     ProfilsModule,
     SagasModule,
     CategoriesModule,
+    NationalitiesModule,
   ],
   controllers: [],
   providers: [],
