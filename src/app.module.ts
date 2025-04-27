@@ -11,6 +11,7 @@ import { SagasModule } from './sagas/sagas.module';
 import { CategoriesModule } from './categories/categories.module';
 import { NationalitiesModule } from './nationalities/nationalities.module';
 import { JobsModule } from './jobs/jobs.module';
+import { ArtistsModule } from './artists/artists.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { JobsModule } from './jobs/jobs.module';
     CategoriesModule,
     NationalitiesModule,
     JobsModule,
+    ArtistsModule,
   ],
   controllers: [],
   providers: [],

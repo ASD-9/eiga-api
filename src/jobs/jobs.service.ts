@@ -35,6 +35,21 @@ export class JobsService {
     }
   }
 
+  async findOneById(id: number): Promise<Job> {
+    try {
+      const job = await this.jobsRepository.findOneBy({ id });
+      if (!job) {
+        throw new NotFoundException(`Métier ${id} introuvable`);
+      }
+      return job;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateJobDto: JobDto): Promise<void> {
     try {
       const result: UpdateResult = await this.jobsRepository.update(

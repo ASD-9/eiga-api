@@ -35,6 +35,21 @@ export class NationalitiesService {
     }
   }
 
+  async findOneById(id: number): Promise<Nationality> {
+    try {
+      const nationality = await this.nationalitiesRepository.findOneBy({ id });
+      if (!nationality) {
+        throw new NotFoundException(`Nationalité ${id} introuvable`);
+      }
+      return nationality;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(
     id: number,
     updateNationalityDto: NationalityDto,
