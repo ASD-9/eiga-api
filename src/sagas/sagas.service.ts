@@ -35,6 +35,21 @@ export class SagasService {
     }
   }
 
+  async findOneById(id: number): Promise<Saga> {
+    try {
+      const saga = await this.sagasRepository.findOneBy({ id });
+      if (!saga) {
+        throw new NotFoundException(`Saga ${id} introuvable`);
+      }
+      return saga;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateSagasDto: SagaDto): Promise<void> {
     try {
       const result: UpdateResult = await this.sagasRepository.update(

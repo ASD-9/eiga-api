@@ -7,11 +7,13 @@ import { Saga } from './entities/saga.entity';
 const mockData = {
   id: 1,
   name: 'Saga 1',
+  movies: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'Saga 2',
+  movies: [],
 };
 
 describe('SagasController', () => {

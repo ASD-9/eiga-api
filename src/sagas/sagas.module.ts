@@ -8,5 +8,6 @@ import { Saga } from './entities/saga.entity';
   imports: [TypeOrmModule.forFeature([Saga])],
   controllers: [SagasController],
   providers: [SagasService],
+  exports: [SagasService],
 })
 export class SagasModule {}

@@ -63,7 +63,9 @@ describe('Sagas', () => {
 
   describe('/sagas (POST)', () => {
     it('should create a new saga and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({ ...mockData, movies: [] });
 
       const createSageDto = {
         name: 'Saga 1',
@@ -73,7 +75,7 @@ describe('Sagas', () => {
         .post('/sagas')
         .send(createSageDto)
         .expect(201)
-        .expect(mockData);
+        .expect({ ...mockData, movies: [] });
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
@@ -110,7 +112,10 @@ describe('Sagas', () => {
 
   describe('/sagas (GET)', () => {
     it('should return all sagas with status 200', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = [
+        { ...mockData, movies: [] },
+        { ...mockData2, movies: [] },
+      ];
       jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       return request(app.getHttpServer() as App)
