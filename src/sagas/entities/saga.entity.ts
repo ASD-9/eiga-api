@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Movie } from '../../movies/entities/movie.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -10,5 +11,6 @@ export class Saga {
   name: string;
 
   @OneToMany(() => Movie, (movie) => movie.saga)
+  @Exclude()
   movies: Movie[];
 }
