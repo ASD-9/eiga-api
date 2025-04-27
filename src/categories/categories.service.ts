@@ -35,6 +35,21 @@ export class CategoriesService {
     }
   }
 
+  async findOneById(id: number): Promise<Category> {
+    try {
+      const category = await this.categoriesRepository.findOneBy({ id });
+      if (!category) {
+        throw new NotFoundException(`Catégorie ${id} introuvable`);
+      }
+      return category;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateCategoryDto: CategoryDto): Promise<void> {
     try {
       const result: UpdateResult = await this.categoriesRepository.update(
