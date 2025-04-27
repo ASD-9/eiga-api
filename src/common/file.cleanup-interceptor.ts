@@ -10,6 +10,10 @@ import * as fs from 'fs';
 
 interface RequestWithFile extends Request {
   file?: Express.Multer.File;
+  files?: {
+    image?: Express.Multer.File[];
+    video?: Express.Multer.File[];
+  };
 }
 
 @Injectable()
@@ -22,6 +26,17 @@ export class FileCleanupInterceptor implements NestInterceptor {
       catchError((error) => {
         if (request.file) {
           fs.unlinkSync(request.file.path);
+        } else if (request.files) {
+          if (request.files.image) {
+            request.files.image.forEach((file) => {
+              fs.unlinkSync(file.path);
+            });
+          }
+          if (request.files.video) {
+            request.files.video.forEach((file) => {
+              fs.unlinkSync(file.path);
+            });
+          }
         }
         throw error;
       }),
