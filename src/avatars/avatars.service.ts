@@ -5,8 +5,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Avatar } from './entities/avatar.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { AvatarDto } from './dto/avatar.dto';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class AvatarsService {
@@ -72,9 +74,26 @@ export class AvatarsService {
 
   async remove(id: number): Promise<void> {
     try {
-      const result: DeleteResult = await this.avatarsRepository.delete(id);
-      if (result.affected === 0) {
+      const avatar = await this.avatarsRepository.findOne({
+        where: { id },
+        select: ['image_name'],
+      });
+      if (!avatar) {
         throw new NotFoundException(`Avatar ${id} introuvable`);
+      }
+      await this.avatarsRepository.delete(id);
+      const avatarPath = join(
+        process.cwd(),
+        'public',
+        'avatars',
+        avatar.image_name,
+      );
+      if (fs.existsSync(avatarPath)) {
+        try {
+          fs.unlinkSync(avatarPath);
+        } catch (error) {
+          console.log(error);
+        }
       }
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

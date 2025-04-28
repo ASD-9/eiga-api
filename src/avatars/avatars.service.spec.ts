@@ -7,6 +7,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { join } from 'path';
+import * as fs from 'fs';
 
 const mockData = {
   id: 1,
@@ -37,6 +39,7 @@ describe('AvatarsService', () => {
             find: jest.fn(),
             findOneBy: jest.fn(),
             update: jest.fn(),
+            findOne: jest.fn(),
             delete: jest.fn(),
           },
         },
@@ -150,8 +153,19 @@ describe('AvatarsService', () => {
   });
 
   describe('remove', () => {
-    it('should remove the avatar with the given id', async () => {
+    it('should remove the avatar with the given id and delete his image', async () => {
+      const testFilePath = join(
+        process.cwd(),
+        'public',
+        'avatars',
+        'avatar1.jpg',
+      );
+      fs.writeFileSync(testFilePath, Buffer.alloc(1024));
+
       const id = 1;
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'avatar1.jpg' } as Avatar);
       const mockDelete = jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 1 } as DeleteResult);
@@ -159,13 +173,12 @@ describe('AvatarsService', () => {
       await service.remove(id);
 
       expect(mockDelete).toHaveBeenCalledWith(id);
+      expect(fs.existsSync(testFilePath)).toBe(false);
     });
 
     it('should throw NotFoundException if the avatar is not found', async () => {
       const id = 99;
-      jest
-        .spyOn(repository, 'delete')
-        .mockResolvedValue({ affected: 0 } as DeleteResult);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       await expect(service.remove(id)).rejects.toThrow(
         new NotFoundException(`Avatar ${id} introuvable`),
@@ -174,6 +187,9 @@ describe('AvatarsService', () => {
 
     it("should throw InternalServerErrorException if there's an error", async () => {
       const id = 1;
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'avatar1.jpg' } as Avatar);
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error('Error'));
 
       await expect(service.remove(id)).rejects.toThrow(

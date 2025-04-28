@@ -39,6 +39,7 @@ describe('Avatars', () => {
         save: jest.fn(),
         find: jest.fn(),
         update: jest.fn(),
+        findOne: jest.fn(),
         delete: jest.fn(),
       })
       .compile();
@@ -272,14 +273,28 @@ describe('Avatars', () => {
   });
 
   describe('/avatars/:id (DELETE)', () => {
-    it('should return status 204 if the avatar is successfully deleted', async () => {
+    it('should delete the avatar with the given id and his image and return status 204', async () => {
+      const testFilePath = join(
+        process.cwd(),
+        'public',
+        'avatars',
+        'avatar1.jpg',
+      );
+      fs.writeFileSync(testFilePath, Buffer.alloc(1024));
+
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'avatar1.jpg' } as Avatar);
       jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 1 } as DeleteResult);
 
-      return request(app.getHttpServer() as App)
-        .delete('/avatars/1')
-        .expect(204);
+      const res = await request(app.getHttpServer() as App).delete(
+        '/avatars/1',
+      );
+
+      expect(res.status).toBe(204);
+      expect(fs.existsSync(testFilePath)).toBe(false);
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {
@@ -294,9 +309,7 @@ describe('Avatars', () => {
     });
 
     it('should throw NotFoundException if the avatar is not found', async () => {
-      jest
-        .spyOn(repository, 'delete')
-        .mockResolvedValue({ affected: 0 } as DeleteResult);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .delete('/avatars/1')
@@ -309,6 +322,9 @@ describe('Avatars', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'avatar1.jpg' } as Avatar);
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error());
 
       return request(app.getHttpServer() as App)
