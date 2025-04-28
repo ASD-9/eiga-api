@@ -90,6 +90,7 @@ describe('Movies', () => {
         save: jest.fn(),
         find: jest.fn(),
         update: jest.fn(),
+        findOne: jest.fn(),
         delete: jest.fn(),
       })
       .overrideProvider(getRepositoryToken(Saga))
@@ -668,14 +669,37 @@ describe('Movies', () => {
   });
 
   describe('/movies/:id (DELETE)', () => {
-    it('should return status 204 if the movie is successfully deleted', async () => {
+    it('should delete the movie with the given id and his image and video and return status 204', async () => {
+      const testImageFilePath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'images',
+        'image1.jpg',
+      );
+      const testVideoFilePath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'videos',
+        'video1.mp4',
+      );
+      fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
+      fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
+
+      jest.spyOn(repository, 'findOne').mockResolvedValue({
+        image_name: 'image1.jpg',
+        video_name: 'video1.mp4',
+      } as Movie);
       jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 1 } as DeleteResult);
 
-      return request(app.getHttpServer() as App)
-        .delete('/movies/1')
-        .expect(204);
+      const res = await request(app.getHttpServer() as App).delete('/movies/1');
+
+      expect(res.status).toBe(204);
+      expect(fs.existsSync(testImageFilePath)).toBe(false);
+      expect(fs.existsSync(testVideoFilePath)).toBe(false);
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {
@@ -690,9 +714,7 @@ describe('Movies', () => {
     });
 
     it('should throw NotFoundException if the movie is not found', async () => {
-      jest
-        .spyOn(repository, 'delete')
-        .mockResolvedValue({ affected: 0 } as DeleteResult);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .delete('/movies/99')
@@ -705,6 +727,10 @@ describe('Movies', () => {
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'findOne').mockResolvedValue({
+        image_name: 'image1.jpg',
+        video_name: 'video1.mp4',
+      } as Movie);
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error('Error'));
 
       return request(app.getHttpServer() as App)

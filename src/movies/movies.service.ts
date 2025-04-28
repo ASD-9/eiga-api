@@ -7,13 +7,15 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from './entities/movie.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { SagasService } from '../sagas/sagas.service';
 import { CategoriesService } from '../categories/categories.service';
 import { NationalitiesService } from '../nationalities/nationalities.service';
 import { Saga } from '../sagas/entities/saga.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Nationality } from '../nationalities/entities/nationality.entity';
+import { join } from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class MoviesService {
@@ -99,9 +101,41 @@ export class MoviesService {
 
   async remove(id: number): Promise<void> {
     try {
-      const result: DeleteResult = await this.moviesRepository.delete(id);
-      if (result.affected === 0) {
+      const movie = await this.moviesRepository.findOne({
+        where: { id },
+        select: ['image_name', 'video_name'],
+      });
+      if (!movie) {
         throw new NotFoundException(`Film ${id} introuvable`);
+      }
+      await this.moviesRepository.delete(id);
+      const movieImagePath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'images',
+        movie.image_name,
+      );
+      const movieVideoPath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'videos',
+        movie.video_name,
+      );
+      if (fs.existsSync(movieImagePath)) {
+        try {
+          fs.unlinkSync(movieImagePath);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      if (fs.existsSync(movieVideoPath)) {
+        try {
+          fs.unlinkSync(movieVideoPath);
+        } catch (error) {
+          console.log(error);
+        }
       }
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

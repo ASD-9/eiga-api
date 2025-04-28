@@ -10,6 +10,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { join } from 'path';
+import * as fs from 'fs';
 
 const mockData = {
   id: 1,
@@ -90,6 +92,7 @@ describe('MoviesService', () => {
             save: jest.fn(),
             find: jest.fn(),
             update: jest.fn(),
+            findOne: jest.fn(),
             delete: jest.fn(),
           },
         },
@@ -324,8 +327,29 @@ describe('MoviesService', () => {
   });
 
   describe('remove', () => {
-    it('should remove the movie with the given id', async () => {
+    it('should remove the movie with the given id and delete his image', async () => {
+      const testImageFilePath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'images',
+        'image1.jpg',
+      );
+      const testVideoFilePath = join(
+        process.cwd(),
+        'public',
+        'movies',
+        'videos',
+        'video1.mp4',
+      );
+      fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
+      fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
+
       const id = 1;
+      jest.spyOn(repository, 'findOne').mockResolvedValue({
+        image_name: 'image1.jpg',
+        video_name: 'video1.mp4',
+      } as Movie);
       const mockDelete = jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 1 } as DeleteResult);
@@ -333,13 +357,13 @@ describe('MoviesService', () => {
       await service.remove(id);
 
       expect(mockDelete).toHaveBeenCalledWith(id);
+      expect(fs.existsSync(testImageFilePath)).toBe(false);
+      expect(fs.existsSync(testVideoFilePath)).toBe(false);
     });
 
     it('should throw NotFoundException if the movie is not found', async () => {
       const id = 99;
-      jest
-        .spyOn(repository, 'delete')
-        .mockResolvedValue({ affected: 0 } as DeleteResult);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       await expect(service.remove(id)).rejects.toThrow(
         new NotFoundException(`Film ${id} introuvable`),
@@ -348,6 +372,10 @@ describe('MoviesService', () => {
 
     it("should throw InternalServerErrorException if there's an error", async () => {
       const id = 1;
+      jest.spyOn(repository, 'findOne').mockResolvedValue({
+        image_name: 'image1.jpg',
+        video_name: 'video1.mp4',
+      } as Movie);
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error('Error'));
 
       await expect(service.remove(id)).rejects.toThrow(
