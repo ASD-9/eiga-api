@@ -7,11 +7,13 @@ import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Artist } from './entities/artist.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { JobsService } from '../jobs/jobs.service';
 import { Job } from '../jobs/entities/job.entity';
 import { NationalitiesService } from '../nationalities/nationalities.service';
 import { Nationality } from '../nationalities/entities/nationality.entity';
+import { join } from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class ArtistsService {
@@ -83,9 +85,26 @@ export class ArtistsService {
 
   async remove(id: number): Promise<void> {
     try {
-      const result: DeleteResult = await this.artistRepository.delete(id);
-      if (result.affected === 0) {
+      const artist = await this.artistRepository.findOne({
+        where: { id },
+        select: ['image_name'],
+      });
+      if (!artist) {
         throw new NotFoundException(`Artiste ${id} introuvable`);
+      }
+      await this.artistRepository.delete(id);
+      const artistPath = join(
+        process.cwd(),
+        'public',
+        'artists',
+        artist.image_name,
+      );
+      if (fs.existsSync(artistPath)) {
+        try {
+          fs.unlinkSync(artistPath);
+        } catch (error) {
+          console.log(error);
+        }
       }
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

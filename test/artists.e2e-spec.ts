@@ -74,6 +74,7 @@ describe('Artists', () => {
         save: jest.fn(),
         find: jest.fn(),
         update: jest.fn(),
+        findOne: jest.fn(),
         delete: jest.fn(),
       })
       .overrideProvider(getRepositoryToken(Job))
@@ -445,14 +446,28 @@ describe('Artists', () => {
   });
 
   describe('/artists/:id (DELETE)', () => {
-    it('should return status 204 if the artist is successfully deleted', async () => {
+    it('should delete the artist with the given id and his image and return status 204', async () => {
+      const testFilePath = join(
+        process.cwd(),
+        'public',
+        'artists',
+        'artist1.jpg',
+      );
+      fs.writeFileSync(testFilePath, Buffer.alloc(1024));
+
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'artist1.jpg' } as Artist);
       jest
         .spyOn(repository, 'delete')
         .mockResolvedValue({ affected: 1 } as DeleteResult);
 
-      return request(app.getHttpServer() as App)
-        .delete('/artists/1')
-        .expect(204);
+      const res = await request(app.getHttpServer() as App).delete(
+        '/artists/1',
+      );
+
+      expect(res.status).toBe(204);
+      expect(fs.existsSync(testFilePath)).toBe(false);
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {
@@ -467,9 +482,7 @@ describe('Artists', () => {
     });
 
     it('should throw NotFoundException if the artist is not found', async () => {
-      jest
-        .spyOn(repository, 'delete')
-        .mockResolvedValue({ affected: 0 } as DeleteResult);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .delete('/artists/99')
@@ -482,6 +495,9 @@ describe('Artists', () => {
     });
 
     it('should throw InternalServerErrorException if there is an error', async () => {
+      jest
+        .spyOn(repository, 'findOne')
+        .mockResolvedValue({ image_name: 'artist1.jpg' } as Artist);
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error());
 
       return request(app.getHttpServer() as App)
