@@ -7,6 +7,8 @@ import { NationalityDto } from './dto/nationality.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Nationality } from './entities/nationality.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { NationalityResponseDto } from './dto/nationality-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class NationalitiesService {
@@ -15,9 +17,14 @@ export class NationalitiesService {
     private nationalitiesRepository: Repository<Nationality>,
   ) {}
 
-  async create(createNationalityDto: NationalityDto): Promise<Nationality> {
+  async create(
+    createNationalityDto: NationalityDto,
+  ): Promise<NationalityResponseDto> {
     try {
-      return await this.nationalitiesRepository.save(createNationalityDto);
+      return plainToInstance(
+        NationalityResponseDto,
+        await this.nationalitiesRepository.save(createNationalityDto),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -25,9 +32,12 @@ export class NationalitiesService {
     }
   }
 
-  async findAll(): Promise<Nationality[]> {
+  async findAll(): Promise<NationalityResponseDto[]> {
     try {
-      return await this.nationalitiesRepository.find();
+      return plainToInstance(
+        NationalityResponseDto,
+        await this.nationalitiesRepository.find(),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -35,13 +45,13 @@ export class NationalitiesService {
     }
   }
 
-  async findOneById(id: number): Promise<Nationality> {
+  async findOneById(id: number): Promise<NationalityResponseDto> {
     try {
       const nationality = await this.nationalitiesRepository.findOneBy({ id });
       if (!nationality) {
         throw new NotFoundException(`Nationalité ${id} introuvable`);
       }
-      return nationality;
+      return plainToInstance(NationalityResponseDto, nationality);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

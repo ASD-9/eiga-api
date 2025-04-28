@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { NationalitiesService } from './nationalities.service';
 import { NationalityDto } from './dto/nationality.dto';
-import { Nationality } from './entities/nationality.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
+import { NationalityResponseDto } from './dto/nationality-response.dto';
 
 @Controller('nationalities')
 export class NationalitiesController {
@@ -20,12 +20,14 @@ export class NationalitiesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createNationalityDto: NationalityDto): Promise<Nationality> {
+  create(
+    @Body() createNationalityDto: NationalityDto,
+  ): Promise<NationalityResponseDto> {
     return this.nationalitiesService.create(createNationalityDto);
   }
 
   @Get()
-  findAll(): Promise<Nationality[]> {
+  findAll(): Promise<NationalityResponseDto[]> {
     return this.nationalitiesService.findAll();
   }
 

@@ -65,7 +65,7 @@ describe('Nationalities', () => {
 
   describe('/nationalities (POST)', () => {
     it('should create a new nationality and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Nationality);
 
       const createNationalityDto = {
         name: 'Nationality 1',
@@ -115,7 +115,9 @@ describe('Nationalities', () => {
   describe('/nationalities (GET)', () => {
     it('should return all nationalities with status 200', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest
+        .spyOn(repository, 'find')
+        .mockResolvedValue(mockResult as Nationality[]);
 
       return request(app.getHttpServer() as App)
         .get('/nationalities')
