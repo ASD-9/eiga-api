@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { JobDto } from './dto/job.dto';
-import { Job } from './entities/job.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
+import { JobResponseDto } from './dto/job-response.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -20,12 +20,12 @@ export class JobsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createJobDto: JobDto): Promise<Job> {
+  create(@Body() createJobDto: JobDto): Promise<JobResponseDto> {
     return this.jobsService.create(createJobDto);
   }
 
   @Get()
-  findAll(): Promise<Job[]> {
+  findAll(): Promise<JobResponseDto[]> {
     return this.jobsService.findAll();
   }
 

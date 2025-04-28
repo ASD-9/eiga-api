@@ -63,7 +63,7 @@ describe('Jobs', () => {
 
   describe('/jobs (POST)', () => {
     it('should create a new job and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Job);
 
       const createJobDto = {
         name: 'Job 1',
@@ -111,7 +111,7 @@ describe('Jobs', () => {
   describe('/jobs (GET)', () => {
     it('should return all jobs with status 200', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Job[]);
 
       return request(app.getHttpServer() as App)
         .get('/jobs')

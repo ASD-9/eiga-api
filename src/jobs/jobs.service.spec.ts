@@ -8,6 +8,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { JobResponseDto } from './dto/job-response.dto';
 
 const mockData = {
   id: 1,
@@ -47,9 +49,11 @@ describe('JobsService', () => {
   describe('create', () => {
     it('should create a new job and return it', async () => {
       const createJobDto = { name: 'Job 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Job);
 
-      expect(await service.create(createJobDto)).toEqual(mockData);
+      expect(await service.create(createJobDto)).toEqual(
+        plainToInstance(JobResponseDto, mockData),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -65,9 +69,11 @@ describe('JobsService', () => {
   describe('findAll', () => {
     it('should return an array of jobs', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Job[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(JobResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -82,9 +88,11 @@ describe('JobsService', () => {
   describe('findOneById', () => {
     it('should return the job with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Job);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(JobResponseDto, mockData),
+      );
     });
 
     it('should throw NotFoundException if the job is not found', async () => {

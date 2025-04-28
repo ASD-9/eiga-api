@@ -3,16 +3,18 @@ import { JobsController } from './jobs.controller';
 import { JobsService } from './jobs.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Job } from './entities/job.entity';
+import { plainToInstance } from 'class-transformer';
+import { JobResponseDto } from './dto/job-response.dto';
 
-const mockData = {
+const mockData = plainToInstance(JobResponseDto, {
   id: 1,
   name: 'Job 1',
-};
+});
 
-const mockData2 = {
+const mockData2 = plainToInstance(JobResponseDto, {
   id: 2,
   name: 'Job 2',
-};
+});
 
 describe('JobsController', () => {
   let controller: JobsController;
