@@ -9,11 +9,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Artist } from './entities/artist.entity';
 import { Repository, UpdateResult } from 'typeorm';
 import { JobsService } from '../jobs/jobs.service';
-import { Job } from '../jobs/entities/job.entity';
 import { NationalitiesService } from '../nationalities/nationalities.service';
-import { Nationality } from '../nationalities/entities/nationality.entity';
 import { join } from 'path';
 import * as fs from 'fs';
+import { ArtistLightResponseDto } from './dto/artist-light-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { ArtistResponseDto } from './dto/artist-response';
+import { JobResponseDto } from '../jobs/dto/job-response.dto';
+import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
 
 @Injectable()
 export class ArtistsService {
@@ -27,26 +30,28 @@ export class ArtistsService {
   async create(
     createArtistDto: CreateArtistDto,
     imageName: string,
-  ): Promise<Artist> {
+  ): Promise<ArtistLightResponseDto> {
     try {
-      const jobs: Job[] = [];
+      const jobs: JobResponseDto[] = [];
       for (const jobId of createArtistDto.jobs_ids) {
         jobs.push(await this.jobsService.findOneById(jobId));
       }
 
-      const nationalities: Nationality[] = [];
+      const nationalities: NationalityResponseDto[] = [];
       for (const nationalityId of createArtistDto.nationalities_ids) {
         nationalities.push(
           await this.nationalitiesService.findOneById(nationalityId),
         );
       }
 
-      return await this.artistRepository.save({
+      const artist: Artist = await this.artistRepository.save({
         ...createArtistDto,
         jobs,
         nationalities,
         image_name: imageName,
       });
+
+      return plainToInstance(ArtistLightResponseDto, artist);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
@@ -55,10 +60,32 @@ export class ArtistsService {
     }
   }
 
-  async findAll(): Promise<Artist[]> {
+  async findAll(): Promise<ArtistLightResponseDto[]> {
     try {
-      return await this.artistRepository.find();
+      return plainToInstance(
+        ArtistLightResponseDto,
+        await this.artistRepository.find({
+          select: ['id', 'name', 'image_name'],
+        }),
+      );
     } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async findOneById(id: number): Promise<ArtistResponseDto> {
+    try {
+      const artist: Artist | null = await this.artistRepository.findOneBy({
+        id,
+      });
+      if (!artist) {
+        throw new NotFoundException(`Artiste ${id} introuvable`);
+      }
+      return plainToInstance(ArtistResponseDto, artist);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
       );

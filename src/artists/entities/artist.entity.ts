@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { Job } from '../../jobs/entities/job.entity';
 import { Nationality } from '../../nationalities/entities/nationality.entity';
 import {
@@ -41,10 +40,4 @@ export class Artist {
     inverseJoinColumn: { name: 'nationality_id', referencedColumnName: 'id' },
   })
   nationalities: Nationality[];
-
-  @Exclude()
-  jobs_ids: number[];
-
-  @Exclude()
-  nationalities_ids: number[];
 }
