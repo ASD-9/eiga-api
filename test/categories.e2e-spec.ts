@@ -65,7 +65,7 @@ describe('Categories', () => {
 
   describe('/categories (POST)', () => {
     it('should create a new category and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Category);
 
       const createCategoryDto = {
         name: 'Category 1',
@@ -115,7 +115,9 @@ describe('Categories', () => {
   describe('/categories (GET)', () => {
     it('should return all categories with status 200', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest
+        .spyOn(repository, 'find')
+        .mockResolvedValue(mockResult as Category[]);
 
       return request(app.getHttpServer() as App)
         .get('/categories')

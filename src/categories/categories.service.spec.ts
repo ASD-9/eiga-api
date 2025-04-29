@@ -8,6 +8,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { CategoryResponseDto } from './dto/category-response.dto';
 
 const mockData = {
   id: 1,
@@ -47,9 +49,11 @@ describe('CategoriesService', () => {
   describe('create', () => {
     it('should create a new category and return it', async () => {
       const createCategoryDto = { name: 'Category 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Category);
 
-      expect(await service.create(createCategoryDto)).toEqual(mockData);
+      expect(await service.create(createCategoryDto)).toEqual(
+        plainToInstance(CategoryResponseDto, mockData),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -65,9 +69,13 @@ describe('CategoriesService', () => {
   describe('findAll', () => {
     it('should return an array of categories', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest
+        .spyOn(repository, 'find')
+        .mockResolvedValue(mockResult as Category[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(CategoryResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -82,9 +90,13 @@ describe('CategoriesService', () => {
   describe('findOneById', () => {
     it('should return the category with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValue(mockData as Category);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(CategoryResponseDto, mockData),
+      );
     });
 
     it('should thrown NotFoundException if the category is not found', async () => {

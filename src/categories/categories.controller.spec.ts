@@ -3,6 +3,7 @@ import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
+import { CategoryResponseDto } from './dto/category-response.dto';
 
 const mockData = {
   id: 1,
@@ -37,7 +38,9 @@ describe('CategoriesController', () => {
   describe('create', () => {
     it('should return the created category', async () => {
       const createCategoryDto = { name: 'Category 1' };
-      jest.spyOn(service, 'create').mockResolvedValue(mockData);
+      jest
+        .spyOn(service, 'create')
+        .mockResolvedValue(mockData as CategoryResponseDto);
 
       expect(await controller.create(createCategoryDto)).toEqual(mockData);
     });
@@ -48,7 +51,9 @@ describe('CategoriesController', () => {
       const mockResult = [mockData, mockData2];
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() => Promise.resolve(mockResult));
+        .mockImplementation(() =>
+          Promise.resolve(mockResult as CategoryResponseDto[]),
+        );
 
       expect(await controller.findAll()).toBe(mockResult);
     });
