@@ -158,14 +158,14 @@ describe('MoviesController', () => {
     });
   });
 
-  describe('findAllByProfilId', () => {
+  describe('findAllByProfil', () => {
     it('should return an array of movies', async () => {
       const mockResult = [mockData, mockData2];
       jest
-        .spyOn(service, 'findAllByProfilId')
+        .spyOn(service, 'findAllByProfil')
         .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockResult));
 
-      expect(await controller.findAllByProfilId(1)).toEqual(
+      expect(await controller.findAllByProfil(1)).toEqual(
         plainToInstance(MovieLightResponseDto, mockResult),
       );
     });

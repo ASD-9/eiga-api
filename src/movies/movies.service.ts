@@ -88,7 +88,7 @@ export class MoviesService {
     }
   }
 
-  async findAllByProfilId(profilId: number): Promise<MovieLightResponseDto[]> {
+  async findAllByProfil(profilId: number): Promise<MovieLightResponseDto[]> {
     try {
       return plainToInstance(
         MovieLightResponseDto,

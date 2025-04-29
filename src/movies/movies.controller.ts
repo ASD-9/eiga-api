@@ -70,10 +70,10 @@ export class MoviesController {
   }
 
   @Get('profil/:profilId')
-  findAllByProfilId(
+  findAllByProfil(
     @Param('profilId', ParseIdPipe) profilId: number,
   ): Promise<MovieLightResponseDto[]> {
-    return this.moviesService.findAllByProfilId(profilId);
+    return this.moviesService.findAllByProfil(profilId);
   }
 
   @Get(':id')

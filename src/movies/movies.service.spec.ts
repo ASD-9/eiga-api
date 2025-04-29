@@ -298,7 +298,7 @@ describe('MoviesService', () => {
     });
   });
 
-  describe('findAllByProfilId', () => {
+  describe('findAllByProfil', () => {
     it('should return an array of movies', async () => {
       const mockResult = [
         {
@@ -314,7 +314,7 @@ describe('MoviesService', () => {
       ];
       jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Movie[]);
 
-      expect(await service.findAllByProfilId(1)).toEqual(
+      expect(await service.findAllByProfil(1)).toEqual(
         plainToInstance(MovieLightResponseDto, mockResult),
       );
     });
@@ -322,7 +322,7 @@ describe('MoviesService', () => {
     it("should throw InternalServerErrorException if there's an error", async () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
-      await expect(service.findAllByProfilId(1)).rejects.toThrow(
+      await expect(service.findAllByProfil(1)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
