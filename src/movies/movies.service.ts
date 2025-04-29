@@ -88,6 +88,22 @@ export class MoviesService {
     }
   }
 
+  async findAllByProfilId(profilId: number): Promise<MovieLightResponseDto[]> {
+    try {
+      return plainToInstance(
+        MovieLightResponseDto,
+        await this.moviesRepository.find({
+          where: { profils: { id: profilId } },
+          select: ['id', 'title', 'image_name'],
+        }),
+      );
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async findOneById(id: number): Promise<MovieResponseDto> {
     try {
       const movie: Movie | null = await this.moviesRepository.findOneBy({

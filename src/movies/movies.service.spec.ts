@@ -17,6 +17,7 @@ import { CategoryResponseDto } from '../categories/dto/category-response.dto';
 import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { MovieLightResponseDto } from './dto/movie-light-response.dto';
+import { MovieResponseDto } from './dto/movie-response.dto';
 
 const mockData = {
   id: 1,
@@ -292,6 +293,62 @@ describe('MoviesService', () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
       await expect(service.findAll()).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findAllByProfilId', () => {
+    it('should return an array of movies', async () => {
+      const mockResult = [
+        {
+          id: mockData.id,
+          title: mockData.title,
+          image_name: mockData.image_name,
+        },
+        {
+          id: mockData2.id,
+          title: mockData2.title,
+          image_name: mockData2.image_name,
+        },
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Movie[]);
+
+      expect(await service.findAllByProfilId(1)).toEqual(
+        plainToInstance(MovieLightResponseDto, mockResult),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
+
+      await expect(service.findAllByProfilId(1)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return a movie', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Movie);
+
+      expect(await service.findOneById(1)).toEqual(
+        plainToInstance(MovieResponseDto, mockData),
+      );
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      await expect(service.findOneById(99)).rejects.toThrow(
+        new NotFoundException(`Film 99 introuvable`),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+
+      await expect(service.findOneById(1)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });

@@ -10,6 +10,7 @@ import {
 import { Saga } from '../../sagas/entities/saga.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Nationality } from '../../nationalities/entities/nationality.entity';
+import { Profil } from '../../profils/entities/profil.entity';
 
 @Entity('Movies')
 export class Movie {
@@ -56,4 +57,12 @@ export class Movie {
     inverseJoinColumn: { name: 'nationality_id', referencedColumnName: 'id' },
   })
   nationalities: Nationality[];
+
+  @ManyToMany(() => Profil)
+  @JoinTable({
+    name: 'Profil_movie',
+    joinColumn: { name: 'movie_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'profil_id', referencedColumnName: 'id' },
+  })
+  profils: Profil[];
 }

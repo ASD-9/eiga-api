@@ -542,6 +542,42 @@ describe('Movies', () => {
     });
   });
 
+  describe('/movies/profil/:profilId (GET)', () => {
+    it('should return all movies with profilId with status 200', async () => {
+      const result = [lightMockData, lightMockData2];
+      jest.spyOn(repository, 'find').mockResolvedValue(result as Movie[]);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/profil/1')
+        .expect(200)
+        .expect(result);
+    });
+
+    it('should throw BadRequestException if the id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .get('/movies/profil/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/profil/1')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
   describe('/movies/:id (GET)', () => {
     it('should return the movie with the given id with status 200', async () => {
       jest.spyOn(repository, 'findOneBy').mockResolvedValue({

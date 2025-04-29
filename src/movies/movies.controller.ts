@@ -69,6 +69,13 @@ export class MoviesController {
     return this.moviesService.findAll();
   }
 
+  @Get('profil/:profilId')
+  findAllByProfilId(
+    @Param('profilId', ParseIdPipe) profilId: number,
+  ): Promise<MovieLightResponseDto[]> {
+    return this.moviesService.findAllByProfilId(profilId);
+  }
+
   @Get(':id')
   findOneById(@Param('id', ParseIdPipe) id: number): Promise<MovieResponseDto> {
     return this.moviesService.findOneById(id);
