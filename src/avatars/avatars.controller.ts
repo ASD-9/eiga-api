@@ -13,12 +13,12 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { AvatarsService } from './avatars.service';
-import { Avatar } from './entities/avatar.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
 import { AvatarDto } from './dto/avatar.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { avatarUploadConfig } from '../common/upload.config';
 import { FileCleanupInterceptor } from '../common/file.cleanup-interceptor';
+import { AvatarResponseDto } from './dto/avatar-response.dto';
 
 @Controller('avatars')
 export class AvatarsController {
@@ -33,7 +33,7 @@ export class AvatarsController {
   create(
     @Body() createAvatarDto: AvatarDto,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<Avatar> {
+  ): Promise<AvatarResponseDto> {
     if (!file) {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -43,7 +43,7 @@ export class AvatarsController {
   }
 
   @Get()
-  findAll(): Promise<Avatar[]> {
+  findAll(): Promise<AvatarResponseDto[]> {
     return this.avatarsService.findAll();
   }
 

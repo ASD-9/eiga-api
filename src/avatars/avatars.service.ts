@@ -9,6 +9,8 @@ import { Repository, UpdateResult } from 'typeorm';
 import { AvatarDto } from './dto/avatar.dto';
 import * as fs from 'fs';
 import { join } from 'path';
+import { AvatarResponseDto } from './dto/avatar-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class AvatarsService {
@@ -17,12 +19,18 @@ export class AvatarsService {
     private avatarsRepository: Repository<Avatar>,
   ) {}
 
-  async create(createAvatarDto: AvatarDto, imageName: string): Promise<Avatar> {
+  async create(
+    createAvatarDto: AvatarDto,
+    imageName: string,
+  ): Promise<AvatarResponseDto> {
     try {
-      return await this.avatarsRepository.save({
-        ...createAvatarDto,
-        image_name: imageName,
-      });
+      return plainToInstance(
+        AvatarResponseDto,
+        await this.avatarsRepository.save({
+          ...createAvatarDto,
+          image_name: imageName,
+        }),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -30,9 +38,12 @@ export class AvatarsService {
     }
   }
 
-  async findAll(): Promise<Avatar[]> {
+  async findAll(): Promise<AvatarResponseDto[]> {
     try {
-      return await this.avatarsRepository.find();
+      return plainToInstance(
+        AvatarResponseDto,
+        await this.avatarsRepository.find(),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -40,13 +51,13 @@ export class AvatarsService {
     }
   }
 
-  async findOneById(id: number): Promise<Avatar> {
+  async findOneById(id: number): Promise<AvatarResponseDto> {
     try {
       const avatar = await this.avatarsRepository.findOneBy({ id });
       if (!avatar) {
         throw new NotFoundException(`Avatar ${id} introuvable`);
       }
-      return avatar;
+      return plainToInstance(AvatarResponseDto, avatar);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
