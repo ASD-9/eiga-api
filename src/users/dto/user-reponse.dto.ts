@@ -15,8 +15,5 @@ export class UserResponseDto {
   password: string;
 
   @Exclude()
-  profils: any[];
-
-  @Exclude()
   role_id: number;
 }

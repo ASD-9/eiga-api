@@ -16,11 +16,11 @@ export class Profil {
   @Column()
   name: string;
 
-  @ManyToOne(() => User, (user) => user.profils)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Avatar, (avatar) => avatar.profils, { eager: true })
+  @ManyToOne(() => Avatar, { eager: true })
   @JoinColumn({ name: 'avatar_id' })
   avatar: Avatar;
 }

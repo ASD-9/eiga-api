@@ -6,7 +6,4 @@ export class RoleResponseDto {
 
   @Expose()
   name: string;
-
-  @Exclude()
-  users: any[];
 }

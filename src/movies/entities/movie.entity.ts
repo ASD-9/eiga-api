@@ -38,7 +38,7 @@ export class Movie {
   @Column()
   video_name: string;
 
-  @ManyToOne(() => Saga, (saga) => saga.movies, { eager: true })
+  @ManyToOne(() => Saga, { eager: true })
   @JoinColumn({ name: 'saga_id' })
   saga: Saga;
 

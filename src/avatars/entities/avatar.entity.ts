@@ -1,5 +1,4 @@
-import { Profil } from '../../profils/entities/profil.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('Avatars')
 export class Avatar {
@@ -11,7 +10,4 @@ export class Avatar {
 
   @Column()
   image_name: string;
-
-  @OneToMany(() => Profil, (profil) => profil.avatar)
-  profils: Profil[];
 }
