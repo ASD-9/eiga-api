@@ -227,18 +227,6 @@ describe('ProfilsService', () => {
       );
     });
 
-    it('should throw NotFoundException if the user is not found', async () => {
-      const id = 1;
-      const updateProfilDto = { user_id: 99 };
-      jest
-        .spyOn(usersService, 'findOneById')
-        .mockRejectedValue(new NotFoundException('Utilisateur 99 introuvable'));
-
-      await expect(service.update(id, updateProfilDto)).rejects.toThrow(
-        new NotFoundException('Utilisateur 99 introuvable'),
-      );
-    });
-
     it("should throw InternalServerErrorException if there's an error", async () => {
       const id = 1;
       const updateProfilDto = { name: 'ProfilEdit' };

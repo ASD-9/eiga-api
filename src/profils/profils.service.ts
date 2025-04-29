@@ -67,17 +67,12 @@ export class ProfilsService {
 
   async update(id: number, updateProfilDto: UpdateProfilDto): Promise<void> {
     try {
-      const { avatar_id, user_id, ...rest } = updateProfilDto;
+      const { avatar_id, ...rest } = updateProfilDto;
       const updateData: Partial<Profil> = { ...rest };
       if (avatar_id) {
         const avatar: AvatarResponseDto =
           await this.avatarsService.findOneById(avatar_id);
         updateData.avatar = avatar as Avatar;
-      }
-      if (user_id) {
-        const user: UserResponseDto =
-          await this.usersService.findOneById(user_id);
-        updateData.user = user;
       }
 
       const result: UpdateResult = await this.profilsRepository.update(

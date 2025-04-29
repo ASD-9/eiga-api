@@ -295,22 +295,6 @@ describe('Profils', () => {
         });
     });
 
-    it('should throw NotFoundException if the user is not found', async () => {
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
-
-      const updateProfilDto = { user_id: 99 };
-
-      return request(app.getHttpServer() as App)
-        .patch('/profils/1')
-        .send(updateProfilDto)
-        .expect(404)
-        .expect({
-          statusCode: 404,
-          message: 'Utilisateur 99 introuvable',
-          error: 'Not Found',
-        });
-    });
-
     it('should throw NotFoundException if the profil is not found', async () => {
       jest
         .spyOn(repository, 'update')
