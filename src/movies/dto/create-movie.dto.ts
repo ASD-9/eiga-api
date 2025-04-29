@@ -4,6 +4,7 @@ import {
   IsDate,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsPositive,
   IsString,
 } from 'class-validator';
@@ -34,10 +35,11 @@ export class CreateMovieDto {
   @IsDate({ message: 'La date de sortie du film doit être une date valide' })
   release_date: Date;
 
+  @IsOptional()
   @Type(() => Number)
   @IsInt({ message: "L'id de la saga doit être un entier" })
   @IsPositive({ message: "L'id de la saga doit être un entier positif" })
-  saga_id: number;
+  saga_id?: number;
 
   @Transform(({ value }) =>
     Array.isArray(value) ? value.map(Number) : [Number(value)],

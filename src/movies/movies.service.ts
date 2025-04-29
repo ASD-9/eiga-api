@@ -18,8 +18,6 @@ import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { MovieResponseDto } from './dto/movie-response.dto';
 import { SagaResponseDto } from '../sagas/dto/saga-response.dto';
-import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
-import { CategoryResponseDto } from '../categories/dto/category-response.dto';
 
 @Injectable()
 export class MoviesService {
@@ -37,27 +35,31 @@ export class MoviesService {
     videoName: string,
   ): Promise<MovieLightResponseDto> {
     try {
-      const saga: SagaResponseDto = await this.sagasService.findOneById(
-        createMovieDto.saga_id,
-      );
+      const { saga_id, categories_ids, nationalities_ids, ...rest } = {
+        ...createMovieDto,
+      };
+      const createData: Partial<Movie> = { ...rest };
 
-      const categories: CategoryResponseDto[] = [];
-      for (const categoryId of createMovieDto.categories_ids) {
-        categories.push(await this.categoriesService.findOneById(categoryId));
+      if (saga_id) {
+        createData.saga = (await this.sagasService.findOneById(
+          saga_id,
+        )) as Saga;
       }
-
-      const nationalities: NationalityResponseDto[] = [];
-      for (const nationalityId of createMovieDto.nationalities_ids) {
-        nationalities.push(
+      createData.categories = [];
+      for (const categoryId of categories_ids) {
+        createData.categories.push(
+          await this.categoriesService.findOneById(categoryId),
+        );
+      }
+      createData.nationalities = [];
+      for (const nationalityId of nationalities_ids) {
+        createData.nationalities.push(
           await this.nationalitiesService.findOneById(nationalityId),
         );
       }
 
       const movie: Movie = await this.moviesRepository.save({
-        ...createMovieDto,
-        saga,
-        categories,
-        nationalities,
+        ...createData,
         image_name: imageName,
         video_name: videoName,
       });
