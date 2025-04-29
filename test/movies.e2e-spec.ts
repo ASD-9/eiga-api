@@ -16,15 +16,17 @@ import { ValidationError } from 'class-validator';
 import { Saga } from '../src/sagas/entities/saga.entity';
 import { Category } from '../src/categories/entities/category.entity';
 import { Nationality } from '../src/nationalities/entities/nationality.entity';
-import { plainToInstance } from 'class-transformer';
 import { join } from 'path';
 import * as fs from 'fs';
 
-const mockData = {
+const lightMockData = {
   id: 1,
   title: 'Movie 1',
-  synopsis: 'Synopsis 1',
   image_name: 'image1.jpg',
+};
+
+const detailsMockData = {
+  synopsis: 'Synopsis 1',
   duration: 120,
   trailer_url: 'https://example.com/trailer1',
   release_date: '2014-01-01T00:00:00.000Z',
@@ -47,31 +49,10 @@ const mockData = {
   ],
 };
 
-const mockData2 = {
+const lightMockData2 = {
   id: 2,
   title: 'Movie 2',
-  synopsis: 'Synopsis 2',
   image_name: 'image2.jpg',
-  duration: 120,
-  trailer_url: 'https://example.com/trailer2',
-  release_date: '2014-01-01T00:00:00.000Z',
-  video_name: 'video2.mp4',
-  saga: {
-    id: 1,
-    name: 'Saga 1',
-  },
-  categories: [
-    {
-      id: 1,
-      name: 'Category 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
 };
 
 describe('Movies', () => {
@@ -89,6 +70,7 @@ describe('Movies', () => {
       .useValue({
         save: jest.fn(),
         find: jest.fn(),
+        findOneBy: jest.fn(),
         update: jest.fn(),
         findOne: jest.fn(),
         delete: jest.fn(),
@@ -164,24 +146,18 @@ describe('Movies', () => {
 
       jest
         .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue({ ...mockData.saga, movies: [] });
+        .mockResolvedValue(detailsMockData.saga as Saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(detailsMockData.categories[0] as Category);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
       jest.spyOn(repository, 'save').mockResolvedValue({
-        ...mockData,
+        ...lightMockData,
+        ...detailsMockData,
         release_date: new Date('2014-01-01'),
-        saga: plainToInstance(Saga, {
-          ...mockData2.saga,
-          movies: [],
-        }),
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      });
+      } as Movie);
 
       const createMovieDto = {
         title: 'Movie 1',
@@ -200,7 +176,7 @@ describe('Movies', () => {
         .attach('image', testImageFilePath)
         .field(createMovieDto)
         .expect(201)
-        .expect(mockData)
+        .expect(lightMockData)
         .then(() => {
           fs.unlinkSync(testImageFilePath);
           fs.unlinkSync(testVideoFilePath);
@@ -418,7 +394,7 @@ describe('Movies', () => {
 
       jest
         .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue({ ...mockData.saga, movies: [] });
+        .mockResolvedValue(detailsMockData.saga as Saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
         .mockRejectedValue(new NotFoundException('Catégorie 99 introuvable'));
@@ -459,10 +435,10 @@ describe('Movies', () => {
 
       jest
         .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue({ ...mockData.saga, movies: [] });
+        .mockResolvedValue(detailsMockData.saga as Saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(detailsMockData.categories[0] as Category);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
         .mockRejectedValue(new NotFoundException('Nationalité 99 introuvable'));
@@ -503,13 +479,13 @@ describe('Movies', () => {
 
       jest
         .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue({ ...mockData.saga, movies: [] });
+        .mockResolvedValue(detailsMockData.saga as Saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(detailsMockData.categories[0] as Category);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error('Error'));
 
       const createMovieDto = {
@@ -543,30 +519,13 @@ describe('Movies', () => {
 
   describe('/movies (GET)', () => {
     it('should return all movies with status 200', async () => {
-      const result = plainToInstance(Movie, [
-        {
-          ...mockData,
-          release_date: new Date('2014-01-01'),
-          saga: plainToInstance(Saga, {
-            ...mockData2.saga,
-            movies: [],
-          }),
-        },
-        {
-          ...mockData2,
-          release_date: new Date('2014-01-01'),
-          saga: plainToInstance(Saga, {
-            ...mockData2.saga,
-            movies: [],
-          }),
-        },
-      ]);
-      jest.spyOn(repository, 'find').mockResolvedValue(result);
+      const result = [lightMockData, lightMockData2];
+      jest.spyOn(repository, 'find').mockResolvedValue(result as Movie[]);
 
       return request(app.getHttpServer() as App)
         .get('/movies')
         .expect(200)
-        .expect([mockData, mockData2]);
+        .expect(result);
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {
@@ -574,6 +533,61 @@ describe('Movies', () => {
 
       return request(app.getHttpServer() as App)
         .get('/movies')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
+  describe('/movies/:id (GET)', () => {
+    it('should return the movie with the given id with status 200', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue({
+        ...lightMockData,
+        ...detailsMockData,
+        release_date: new Date('2014-01-01'),
+      } as Movie);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/1')
+        .expect(200)
+        .expect({
+          ...lightMockData,
+          ...detailsMockData,
+        });
+    });
+
+    it('should throw BadRequestException if the id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .get('/movies/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/99')
+        .expect(404)
+        .expect({
+          statusCode: 404,
+          message: 'Film 99 introuvable',
+          error: 'Not Found',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/1')
         .expect(500)
         .expect({
           statusCode: 500,

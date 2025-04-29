@@ -333,7 +333,7 @@ describe('Artists', () => {
       return request(app.getHttpServer() as App)
         .get('/artists')
         .expect(200)
-        .expect([lightMockData, lightMockData2]);
+        .expect(result);
     });
 
     it('should thow InternalServerErrorException if there is an error', async () => {

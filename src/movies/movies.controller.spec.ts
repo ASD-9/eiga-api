@@ -7,6 +7,9 @@ import { SagasService } from '../sagas/sagas.service';
 import { CategoriesService } from '../categories/categories.service';
 import { NationalitiesService } from '../nationalities/nationalities.service';
 import { InternalServerErrorException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { MovieLightResponseDto } from './dto/movie-light-response.dto';
+import { MovieResponseDto } from './dto/movie-response.dto';
 
 const mockData = {
   id: 1,
@@ -20,7 +23,6 @@ const mockData = {
   saga: {
     id: 1,
     name: 'Saga 1',
-    movies: [],
   },
   categories: [
     {
@@ -34,9 +36,6 @@ const mockData = {
       name: 'Nationality 1',
     },
   ],
-  saga_id: 1,
-  categories_ids: [1],
-  nationalities_ids: [1],
 };
 
 const mockData2 = {
@@ -51,7 +50,6 @@ const mockData2 = {
   saga: {
     id: 1,
     name: 'Saga 1',
-    movies: [],
   },
   categories: [
     {
@@ -65,9 +63,6 @@ const mockData2 = {
       name: 'Nationality 1',
     },
   ],
-  saga_id: 1,
-  categories_ids: [1],
-  nationalities_ids: [1],
 };
 
 describe('MoviesController', () => {
@@ -118,18 +113,17 @@ describe('MoviesController', () => {
         image: [{ filename: 'image1.jpg' }],
         video: [{ filename: 'video1.mp4' }],
       };
-      jest.spyOn(service, 'create').mockResolvedValue(mockData);
+      jest
+        .spyOn(service, 'create')
+        .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockData));
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      expect(await controller.create(createMovieDto, files as any)).toEqual({
-        ...mockData,
-        saga_id: undefined,
-        categories_ids: undefined,
-        nationalities_ids: undefined,
-      });
+      expect(await controller.create(createMovieDto, files as any)).toEqual(
+        plainToInstance(MovieLightResponseDto, mockData),
+      );
     });
 
-    it('should throw InternalServerErrorException if at least one file is missing', async () => {
+    it('should throw InternalServerErrorException if at least one file is missing', () => {
       const createMovieDto = {
         title: 'Movie 1',
         synopsis: 'Synopsis 1',
@@ -143,12 +137,9 @@ describe('MoviesController', () => {
       const files = {
         image: [{ filename: 'image1.jpg' }],
       };
-      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
-      await expect(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        controller.create(createMovieDto, files as any),
-      ).rejects.toThrow(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      expect(() => controller.create(createMovieDto, files as any)).toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
@@ -157,9 +148,25 @@ describe('MoviesController', () => {
   describe('findAll', () => {
     it('should return an array of movies', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(service, 'findAll').mockResolvedValue(mockResult);
+      jest
+        .spyOn(service, 'findAll')
+        .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockResult));
 
-      expect(await controller.findAll()).toEqual(mockResult);
+      expect(await controller.findAll()).toEqual(
+        plainToInstance(MovieLightResponseDto, mockResult),
+      );
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return a movie', async () => {
+      jest
+        .spyOn(service, 'findOneById')
+        .mockResolvedValue(plainToInstance(MovieResponseDto, mockData));
+
+      expect(await controller.findOneById(1)).toEqual(
+        plainToInstance(MovieResponseDto, mockData),
+      );
     });
   });
 

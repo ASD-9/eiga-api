@@ -12,10 +12,14 @@ import { SagasService } from '../sagas/sagas.service';
 import { CategoriesService } from '../categories/categories.service';
 import { NationalitiesService } from '../nationalities/nationalities.service';
 import { Saga } from '../sagas/entities/saga.entity';
-import { Category } from '../categories/entities/category.entity';
-import { Nationality } from '../nationalities/entities/nationality.entity';
 import { join } from 'path';
 import * as fs from 'fs';
+import { MovieLightResponseDto } from './dto/movie-light-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { MovieResponseDto } from './dto/movie-response.dto';
+import { SagaResponseDto } from '../sagas/dto/saga-response.dto';
+import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
+import { CategoryResponseDto } from '../categories/dto/category-response.dto';
 
 @Injectable()
 export class MoviesService {
@@ -31,25 +35,25 @@ export class MoviesService {
     createMovieDto: CreateMovieDto,
     imageName: string,
     videoName: string,
-  ): Promise<Movie> {
+  ): Promise<MovieLightResponseDto> {
     try {
-      const saga: Saga = await this.sagasService.findOneById(
+      const saga: SagaResponseDto = await this.sagasService.findOneById(
         createMovieDto.saga_id,
       );
 
-      const categories: Category[] = [];
+      const categories: CategoryResponseDto[] = [];
       for (const categoryId of createMovieDto.categories_ids) {
         categories.push(await this.categoriesService.findOneById(categoryId));
       }
 
-      const nationalities: Nationality[] = [];
+      const nationalities: NationalityResponseDto[] = [];
       for (const nationalityId of createMovieDto.nationalities_ids) {
         nationalities.push(
           await this.nationalitiesService.findOneById(nationalityId),
         );
       }
 
-      return await this.moviesRepository.save({
+      const movie: Movie = await this.moviesRepository.save({
         ...createMovieDto,
         saga,
         categories,
@@ -57,6 +61,8 @@ export class MoviesService {
         image_name: imageName,
         video_name: videoName,
       });
+
+      return plainToInstance(MovieLightResponseDto, movie);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
@@ -65,10 +71,32 @@ export class MoviesService {
     }
   }
 
-  async findAll(): Promise<Movie[]> {
+  async findAll(): Promise<MovieLightResponseDto[]> {
     try {
-      return await this.moviesRepository.find();
+      return plainToInstance(
+        MovieLightResponseDto,
+        await this.moviesRepository.find({
+          select: ['id', 'title', 'image_name'],
+        }),
+      );
     } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async findOneById(id: number): Promise<MovieResponseDto> {
+    try {
+      const movie: Movie | null = await this.moviesRepository.findOneBy({
+        id,
+      });
+      if (!movie) {
+        throw new NotFoundException(`Film ${id} introuvable`);
+      }
+      return plainToInstance(MovieResponseDto, movie);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
       );
@@ -77,10 +105,12 @@ export class MoviesService {
 
   async update(id: number, updateMovieDto: UpdateMovieDto): Promise<void> {
     try {
-      const { saga_id, ...updateData }: Partial<Movie> = { ...updateMovieDto };
+      const { saga_id, ...rest } = { ...updateMovieDto };
+      const updateData: Partial<Movie> = { ...rest };
       if (saga_id) {
-        const saga: Saga = await this.sagasService.findOneById(saga_id);
-        updateData.saga = saga;
+        const saga: SagaResponseDto =
+          await this.sagasService.findOneById(saga_id);
+        updateData.saga = saga as Saga;
       }
 
       const result: UpdateResult = await this.moviesRepository.update(
