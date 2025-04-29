@@ -32,26 +32,6 @@ const mockData2 = {
   },
 };
 
-// const mockRepoData = {
-//   id: 1,
-//   username: 'user1',
-//   password: 'hashedPassword',
-//   role: {
-//     id: 1,
-//     name: 'Super Admin',
-//   },
-// };
-
-// const mockRepoData2 = {
-//   id: 2,
-//   username: 'user2',
-//   password: 'hashedPassword',
-//   role: {
-//     id: 2,
-//     name: 'Admin',
-//   },
-// };
-
 describe('Users', () => {
   let app: INestApplication;
   let repository: Repository<User>;

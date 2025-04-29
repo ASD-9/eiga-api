@@ -13,8 +13,7 @@ import { ProfilsService } from './profils.service';
 import { CreateProfilDto } from './dto/create-profil.dto';
 import { UpdateProfilDto } from './dto/update-profil.dto';
 import { ParseIdPipe } from '../common/parse-id.pipe';
-import { Profil } from './entities/profil.entity';
-import { plainToClass } from 'class-transformer';
+import { ProfilResponseDto } from './dto/profil-response.dto';
 
 @Controller('profils')
 export class ProfilsController {
@@ -22,17 +21,14 @@ export class ProfilsController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createProfilDto: CreateProfilDto): Promise<Profil> {
-    return plainToClass(
-      Profil,
-      await this.profilsService.create(createProfilDto),
-    );
+  create(@Body() createProfilDto: CreateProfilDto): Promise<ProfilResponseDto> {
+    return this.profilsService.create(createProfilDto);
   }
 
   @Get('user/:userId')
   findAllByUser(
     @Param('userId', ParseIdPipe) userId: number,
-  ): Promise<Profil[]> {
+  ): Promise<ProfilResponseDto[]> {
     return this.profilsService.findAllByUser(userId);
   }
 
