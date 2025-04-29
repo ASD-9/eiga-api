@@ -7,6 +7,8 @@ import { JobDto } from './dto/job.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Job } from './entities/job.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { JobResponseDto } from './dto/job-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class JobsService {
@@ -15,9 +17,12 @@ export class JobsService {
     private jobsRepository: Repository<Job>,
   ) {}
 
-  async create(createJobDto: JobDto): Promise<Job> {
+  async create(createJobDto: JobDto): Promise<JobResponseDto> {
     try {
-      return await this.jobsRepository.save(createJobDto);
+      return plainToInstance(
+        JobResponseDto,
+        await this.jobsRepository.save(createJobDto),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -25,9 +30,9 @@ export class JobsService {
     }
   }
 
-  async findAll(): Promise<Job[]> {
+  async findAll(): Promise<JobResponseDto[]> {
     try {
-      return await this.jobsRepository.find();
+      return plainToInstance(JobResponseDto, await this.jobsRepository.find());
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -35,13 +40,13 @@ export class JobsService {
     }
   }
 
-  async findOneById(id: number): Promise<Job> {
+  async findOneById(id: number): Promise<JobResponseDto> {
     try {
       const job = await this.jobsRepository.findOneBy({ id });
       if (!job) {
         throw new NotFoundException(`Métier ${id} introuvable`);
       }
-      return job;
+      return plainToInstance(JobResponseDto, job);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

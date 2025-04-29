@@ -8,17 +8,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { SagaResponseDto } from './dto/saga-response.dto';
 
 const mockData = {
   id: 1,
   name: 'Saga 1',
-  movies: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'Saga 2',
-  movies: [],
 };
 
 describe('SagasService', () => {
@@ -49,9 +49,11 @@ describe('SagasService', () => {
   describe('create', () => {
     it('should create a new saga and return it', async () => {
       const createSagaDto = { name: 'Saga 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Saga);
 
-      expect(await service.create(createSagaDto)).toEqual(mockData);
+      expect(await service.create(createSagaDto)).toEqual(
+        plainToInstance(SagaResponseDto, mockData),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -67,9 +69,11 @@ describe('SagasService', () => {
   describe('findAll', () => {
     it('should return an array of sagas', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Saga[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(SagaResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -84,9 +88,11 @@ describe('SagasService', () => {
   describe('findOneById', () => {
     it('should return the saga with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Saga);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(SagaResponseDto, mockData),
+      );
     });
 
     it('should thrown NotFoundException if the saga is not found', async () => {

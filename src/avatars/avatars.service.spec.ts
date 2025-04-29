@@ -9,19 +9,19 @@ import {
 } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
+import { plainToInstance } from 'class-transformer';
+import { AvatarResponseDto } from './dto/avatar-response.dto';
 
 const mockData = {
   id: 1,
   name: 'avatar1',
   image_name: 'avatar1.jpg',
-  profils: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'avatar2',
   image_name: 'avatar2.jpg',
-  profils: [],
 };
 
 describe('AvatarsService', () => {
@@ -54,10 +54,10 @@ describe('AvatarsService', () => {
     it('should create a new avatar and return it', async () => {
       const createAvatarDto = { name: 'avatar1' };
       const imageName = 'avatar1.jpg';
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Avatar);
 
       expect(await service.create(createAvatarDto, imageName)).toEqual(
-        mockData,
+        plainToInstance(AvatarResponseDto, mockData),
       );
     });
 
@@ -75,9 +75,11 @@ describe('AvatarsService', () => {
   describe('findAll', () => {
     it('should return an array of avatars', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Avatar[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(AvatarResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -92,9 +94,11 @@ describe('AvatarsService', () => {
   describe('findOneById', () => {
     it('should return the avatar with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Avatar);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(AvatarResponseDto, mockData),
+      );
     });
 
     it('should throw NotFoundException if the avatar is not found', async () => {

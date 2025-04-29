@@ -15,14 +15,16 @@ import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
 import { Job } from '../src/jobs/entities/job.entity';
 import { Nationality } from '../src/nationalities/entities/nationality.entity';
-import { plainToInstance } from 'class-transformer';
 import { join } from 'path';
 import * as fs from 'fs';
 
-const mockData = {
+const lightMockData = {
   id: 1,
   name: 'Artist 1',
   image_name: 'artist1.jpg',
+};
+
+const detailsMockData = {
   bio: 'Artist 1 bio',
   birthday: '1990-01-01T00:00:00.000Z',
   jobs: [
@@ -39,24 +41,10 @@ const mockData = {
   ],
 };
 
-const mockData2 = {
+const lightMockData2 = {
   id: 2,
   name: 'Artist 2',
   image_name: 'artist2.jpg',
-  bio: 'Artist 2 bio',
-  birthday: '1990-01-01T00:00:00.000Z',
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
 };
 
 describe('Artists', () => {
@@ -73,6 +61,7 @@ describe('Artists', () => {
       .useValue({
         save: jest.fn(),
         find: jest.fn(),
+        findOneBy: jest.fn(),
         update: jest.fn(),
         findOne: jest.fn(),
         delete: jest.fn(),
@@ -129,16 +118,15 @@ describe('Artists', () => {
 
       jest
         .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(detailsMockData.jobs[0] as Job);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
       jest.spyOn(repository, 'save').mockResolvedValue({
-        ...mockData,
+        ...lightMockData,
+        ...detailsMockData,
         birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
-        nationalities_ids: [1],
-      });
+      } as Artist);
 
       const createArtistDto = {
         name: 'Artist 1',
@@ -153,7 +141,7 @@ describe('Artists', () => {
         .attach('image', testFilePath)
         .field(createArtistDto)
         .expect(201)
-        .expect(mockData)
+        .expect(lightMockData)
         .then(() => {
           fs.unlinkSync(testFilePath);
         });
@@ -273,7 +261,7 @@ describe('Artists', () => {
 
       jest
         .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(detailsMockData.jobs[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
         .mockRejectedValue(new NotFoundException('Nationalité 99 introuvable'));
@@ -307,10 +295,10 @@ describe('Artists', () => {
 
       jest
         .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(detailsMockData.jobs[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(detailsMockData.nationalities[0]);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
       const createArtistDto = {
@@ -339,26 +327,13 @@ describe('Artists', () => {
 
   describe('/artists (GET)', () => {
     it('should return all artists with status 200', async () => {
-      const result = plainToInstance(Artist, [
-        {
-          ...mockData,
-          birthday: new Date('1990-01-01'),
-          jobs_ids: [1],
-          nationalities_ids: [1],
-        },
-        {
-          ...mockData2,
-          birthday: new Date('1990-01-01'),
-          jobs_ids: [1],
-          nationalities_ids: [1],
-        },
-      ]);
-      jest.spyOn(repository, 'find').mockResolvedValue(result);
+      const result = [lightMockData, lightMockData2];
+      jest.spyOn(repository, 'find').mockResolvedValue(result as Artist[]);
 
       return request(app.getHttpServer() as App)
         .get('/artists')
         .expect(200)
-        .expect([mockData, mockData2]);
+        .expect(result);
     });
 
     it('should thow InternalServerErrorException if there is an error', async () => {
@@ -366,6 +341,61 @@ describe('Artists', () => {
 
       return request(app.getHttpServer() as App)
         .get('/artists')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
+  describe('/artists/:id (GET)', () => {
+    it('should return the artist with given id with status 200', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue({
+        ...lightMockData,
+        ...detailsMockData,
+        birthday: new Date('1990-01-01'),
+      } as Artist);
+
+      return request(app.getHttpServer() as App)
+        .get('/artists/1')
+        .expect(200)
+        .expect({
+          ...lightMockData,
+          ...detailsMockData,
+        });
+    });
+
+    it('should throw BadRequestException if the id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .get('/artists/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw NotFoundException if the artist is not found', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      return request(app.getHttpServer() as App)
+        .get('/artists/99')
+        .expect(404)
+        .expect({
+          statusCode: 404,
+          message: 'Artiste 99 introuvable',
+          error: 'Not Found',
+        });
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error());
+
+      return request(app.getHttpServer() as App)
+        .get('/artists/1')
         .expect(500)
         .expect({
           statusCode: 500,

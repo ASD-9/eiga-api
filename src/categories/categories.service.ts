@@ -7,6 +7,8 @@ import { CategoryDto } from './dto/category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { CategoryResponseDto } from './dto/category-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class CategoriesService {
@@ -15,9 +17,12 @@ export class CategoriesService {
     private categoriesRepository: Repository<Category>,
   ) {}
 
-  async create(createCategoryDto: CategoryDto): Promise<Category> {
+  async create(createCategoryDto: CategoryDto): Promise<CategoryResponseDto> {
     try {
-      return await this.categoriesRepository.save(createCategoryDto);
+      return plainToInstance(
+        CategoryResponseDto,
+        await this.categoriesRepository.save(createCategoryDto),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -25,9 +30,12 @@ export class CategoriesService {
     }
   }
 
-  async findAll(): Promise<Category[]> {
+  async findAll(): Promise<CategoryResponseDto[]> {
     try {
-      return await this.categoriesRepository.find();
+      return plainToInstance(
+        CategoryResponseDto,
+        await this.categoriesRepository.find(),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -35,13 +43,13 @@ export class CategoriesService {
     }
   }
 
-  async findOneById(id: number): Promise<Category> {
+  async findOneById(id: number): Promise<CategoryResponseDto> {
     try {
       const category = await this.categoriesRepository.findOneBy({ id });
       if (!category) {
         throw new NotFoundException(`Catégorie ${id} introuvable`);
       }
-      return category;
+      return plainToInstance(CategoryResponseDto, category);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

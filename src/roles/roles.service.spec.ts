@@ -7,17 +7,16 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
 const mockData = {
   id: 1,
   name: 'Super Admin',
-  users: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'Admin',
-  users: [],
 };
 
 describe('RolesService', () => {
@@ -45,9 +44,11 @@ describe('RolesService', () => {
   describe('findAll', () => {
     it('should return an array of roles', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Role[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(Role, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -62,9 +63,11 @@ describe('RolesService', () => {
   describe('findOneById', () => {
     it('should return the role with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Role);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(Role, mockData),
+      );
     });
 
     it('should throw NotFoundException if the role is not found', async () => {

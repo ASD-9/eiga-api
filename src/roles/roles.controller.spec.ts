@@ -3,18 +3,18 @@ import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Role } from './entities/role.entity';
+import { plainToInstance } from 'class-transformer';
+import { RoleResponseDto } from './dto/role-response.dto';
 
-const mockData = {
+const mockData = plainToInstance(RoleResponseDto, {
   id: 1,
   name: 'Super Admin',
-  users: [],
-};
+});
 
-const mockData2 = {
+const mockData2 = plainToInstance(RoleResponseDto, {
   id: 2,
   name: 'Admin',
-  users: [],
-};
+});
 
 describe('RolesController', () => {
   let controller: RolesController;

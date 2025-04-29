@@ -10,7 +10,9 @@ import { User } from './entities/user.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { RolesService } from '../roles/roles.service';
-import { Role } from '../roles/entities/role.entity';
+import { UserResponseDto } from './dto/user-reponse.dto';
+import { plainToInstance } from 'class-transformer';
+import { RoleResponseDto } from '../roles/dto/role-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,9 +22,9 @@ export class UsersService {
     private rolesService: RolesService,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     try {
-      const role: Role = await this.rolesService.findOneById(
+      const role: RoleResponseDto = await this.rolesService.findOneById(
         createUserDto.role_id,
       );
 
@@ -32,11 +34,13 @@ export class UsersService {
         salt,
       );
 
-      return await this.usersRepository.save({
+      const user: User = await this.usersRepository.save({
         ...createUserDto,
         password: hashedPassword,
         role: role,
       });
+
+      return plainToInstance(UserResponseDto, user);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
@@ -45,9 +49,12 @@ export class UsersService {
     }
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<UserResponseDto[]> {
     try {
-      return await this.usersRepository.find();
+      return plainToInstance(
+        UserResponseDto,
+        await this.usersRepository.find(),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -55,13 +62,13 @@ export class UsersService {
     }
   }
 
-  async findOneById(id: number): Promise<User> {
+  async findOneById(id: number): Promise<UserResponseDto> {
     try {
       const user = await this.usersRepository.findOneBy({ id });
       if (!user) {
         throw new NotFoundException(`Utilisateur ${id} introuvable`);
       }
-      return user;
+      return plainToInstance(UserResponseDto, user);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
@@ -72,17 +79,16 @@ export class UsersService {
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<void> {
     try {
-      const { role_id, ...updateData }: Partial<User> = { ...updateUserDto };
-      if (updateUserDto.password) {
+      const { password, role_id, ...rest } = updateUserDto;
+      const updateData: Partial<User> = { ...rest };
+      if (password) {
         const salt: string = await bcrypt.genSalt();
-        const hashedPassword: string = await bcrypt.hash(
-          updateUserDto.password,
-          salt,
-        );
+        const hashedPassword: string = await bcrypt.hash(password, salt);
         updateData.password = hashedPassword;
       }
       if (role_id) {
-        const role: Role = await this.rolesService.findOneById(role_id);
+        const role: RoleResponseDto =
+          await this.rolesService.findOneById(role_id);
         updateData.role = role;
       }
 

@@ -5,57 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Profil } from './entities/profil.entity';
 import { AvatarsService } from '../avatars/avatars.service';
 import { UsersService } from '../users/users.service';
-import { plainToInstance } from 'class-transformer';
-
-const mockServiceData = {
-  id: 1,
-  name: 'Profil1',
-  avatar: {
-    id: 1,
-    name: 'Avatar1',
-    image_name: 'avatar1.jpg',
-    profils: [],
-  },
-  avatar_id: 1,
-  user: {
-    id: 1,
-    username: 'user1',
-    password: 'hashedPassword',
-    role: {
-      id: 1,
-      name: 'Super Admin',
-      users: [],
-    },
-    role_id: 1,
-    profils: [],
-  },
-  user_id: 1,
-};
-
-const mockServiceData2 = {
-  id: 2,
-  name: 'Profil2',
-  avatar: {
-    id: 2,
-    name: 'Avatar2',
-    image_name: 'avatar2.jpg',
-    profils: [],
-  },
-  avatar_id: 2,
-  user: {
-    id: 1,
-    username: 'user1',
-    password: 'hashedPassword',
-    role: {
-      id: 1,
-      name: 'Super Admin',
-      users: [],
-    },
-    role_id: 1,
-    profils: [],
-  },
-  user_id: 1,
-};
+import { ProfilResponseDto } from './dto/profil-response.dto';
 
 const mockData = {
   id: 1,
@@ -64,7 +14,6 @@ const mockData = {
     id: 1,
     name: 'Avatar1',
     image_name: 'avatar1.jpg',
-    profils: [],
   },
 };
 
@@ -75,7 +24,6 @@ const mockData2 = {
     id: 2,
     name: 'Avatar2',
     image_name: 'avatar2.jpg',
-    profils: [],
   },
 };
 
@@ -116,7 +64,7 @@ describe('ProfilsController', () => {
       };
       jest
         .spyOn(service, 'create')
-        .mockResolvedValue(plainToInstance(Profil, mockServiceData));
+        .mockResolvedValue(mockData as ProfilResponseDto);
 
       expect(await controller.create(createProfilDto)).toEqual(mockData);
     });
@@ -125,11 +73,10 @@ describe('ProfilsController', () => {
   describe('findAllByUser', () => {
     it('should return an array of profils for the given user', async () => {
       const userId = 1;
-      const mockResult = [
-        plainToInstance(Profil, mockServiceData),
-        plainToInstance(Profil, mockServiceData2),
-      ];
-      jest.spyOn(service, 'findAllByUser').mockResolvedValue(mockResult);
+      const mockResult = [mockData, mockData2];
+      jest
+        .spyOn(service, 'findAllByUser')
+        .mockResolvedValue(mockResult as ProfilResponseDto[]);
 
       expect(await controller.findAllByUser(userId)).toEqual([
         mockData,

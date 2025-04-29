@@ -12,6 +12,11 @@ import {
 } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
+import { SagaResponseDto } from '../sagas/dto/saga-response.dto';
+import { CategoryResponseDto } from '../categories/dto/category-response.dto';
+import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 
 const mockData = {
   id: 1,
@@ -25,7 +30,6 @@ const mockData = {
   saga: {
     id: 1,
     name: 'Saga 1',
-    movies: [],
   },
   categories: [
     {
@@ -39,9 +43,6 @@ const mockData = {
       name: 'Nationality 1',
     },
   ],
-  saga_id: 1,
-  categories_ids: [1],
-  nationalities_ids: [1],
 };
 
 const mockData2 = {
@@ -56,7 +57,6 @@ const mockData2 = {
   saga: {
     id: 1,
     name: 'Saga 1',
-    movies: [],
   },
   categories: [
     {
@@ -70,9 +70,6 @@ const mockData2 = {
       name: 'Nationality 1',
     },
   ],
-  saga_id: 1,
-  categories_ids: [1],
-  nationalities_ids: [1],
 };
 
 describe('MoviesService', () => {
@@ -91,6 +88,7 @@ describe('MoviesService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
@@ -140,18 +138,20 @@ describe('MoviesService', () => {
       const imageName = 'image1.jpg';
       const videoName = 'video1.mp4';
 
-      jest.spyOn(sagasService, 'findOneById').mockResolvedValue(mockData.saga);
+      jest
+        .spyOn(sagasService, 'findOneById')
+        .mockResolvedValue(mockData.saga as SagaResponseDto);
       jest
         .spyOn(categoriesService, 'findOneById')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(mockData.categories[0] as CategoryResponseDto);
       jest
         .spyOn(nationalitiesService, 'findOneById')
-        .mockResolvedValue(mockData.nationalities[0]);
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+        .mockResolvedValue(mockData.nationalities[0] as NationalityResponseDto);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Movie);
 
       expect(
         await service.create(createMovieDto, imageName, videoName),
-      ).toEqual(mockData);
+      ).toEqual(plainToInstance(MovieLightResponseDto, mockData));
     });
 
     it('should thrown NotFoundException if the saga is not found', async () => {
@@ -191,7 +191,9 @@ describe('MoviesService', () => {
       const imageName = 'image1.jpg';
       const videoName = 'video1.mp4';
 
-      jest.spyOn(sagasService, 'findOneById').mockResolvedValue(mockData.saga);
+      jest
+        .spyOn(sagasService, 'findOneById')
+        .mockResolvedValue(mockData.saga as SagaResponseDto);
       jest
         .spyOn(categoriesService, 'findOneById')
         .mockRejectedValue(new NotFoundException('Catégorie 99 introuvable'));
@@ -215,10 +217,12 @@ describe('MoviesService', () => {
       const imageName = 'image1.jpg';
       const videoName = 'video1.mp4';
 
-      jest.spyOn(sagasService, 'findOneById').mockResolvedValue(mockData.saga);
+      jest
+        .spyOn(sagasService, 'findOneById')
+        .mockResolvedValue(mockData.saga as SagaResponseDto);
       jest
         .spyOn(categoriesService, 'findOneById')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(mockData.categories[0] as CategoryResponseDto);
       jest
         .spyOn(nationalitiesService, 'findOneById')
         .mockRejectedValue(
@@ -244,13 +248,15 @@ describe('MoviesService', () => {
       const imageName = 'image1.jpg';
       const videoName = 'video1.mp4';
 
-      jest.spyOn(sagasService, 'findOneById').mockResolvedValue(mockData.saga);
+      jest
+        .spyOn(sagasService, 'findOneById')
+        .mockResolvedValue(mockData.saga as SagaResponseDto);
       jest
         .spyOn(categoriesService, 'findOneById')
-        .mockResolvedValue(mockData.categories[0]);
+        .mockResolvedValue(mockData.categories[0] as CategoryResponseDto);
       jest
         .spyOn(nationalitiesService, 'findOneById')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(mockData.nationalities[0] as NationalityResponseDto);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
       await expect(
@@ -263,10 +269,23 @@ describe('MoviesService', () => {
 
   describe('findAll', () => {
     it('should return an array of movies', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      const mockResult = [
+        {
+          id: mockData.id,
+          title: mockData.title,
+          image_name: mockData.image_name,
+        },
+        {
+          id: mockData2.id,
+          title: mockData2.title,
+          image_name: mockData2.image_name,
+        },
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Movie[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(MovieLightResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -291,7 +310,7 @@ describe('MoviesService', () => {
       expect(mockUpdate).toHaveBeenCalledWith(id, updateMovieDto);
     });
 
-    it('should throw NotFoundException if the saga is not found', async () => {
+    it('should throw NotFoundException if the mvoie is not found', async () => {
       const id = 99;
       const updateMovieDto = { title: 'Movie 1' };
       jest
@@ -303,7 +322,7 @@ describe('MoviesService', () => {
       );
     });
 
-    it('should throw NotFoundException if the movie is not found', async () => {
+    it('should throw NotFoundException if the saga is not found', async () => {
       const id = 99;
       const updateMovieDto = { title: 'Movie 1', saga_id: 1 };
       jest

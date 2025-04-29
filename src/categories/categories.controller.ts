@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CategoryDto } from './dto/category.dto';
-import { Category } from './entities/category.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
+import { CategoryResponseDto } from './dto/category-response.dto';
 
 @Controller('categories')
 export class CategoriesController {
@@ -20,12 +20,12 @@ export class CategoriesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createCategoryDto: CategoryDto): Promise<Category> {
+  create(@Body() createCategoryDto: CategoryDto): Promise<CategoryResponseDto> {
     return this.categoriesService.create(createCategoryDto);
   }
 
   @Get()
-  findAll(): Promise<Category[]> {
+  findAll(): Promise<CategoryResponseDto[]> {
     return this.categoriesService.findAll();
   }
 

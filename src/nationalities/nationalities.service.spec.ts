@@ -8,6 +8,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+import { NationalityResponseDto } from './dto/nationality-response.dto';
 
 const mockData = {
   id: 1,
@@ -49,9 +51,11 @@ describe('NationalitiesService', () => {
   describe('create', () => {
     it('should create a new nationality and return it', async () => {
       const createNationalityDto = { name: 'Nationality 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Nationality);
 
-      expect(await service.create(createNationalityDto)).toEqual(mockData);
+      expect(await service.create(createNationalityDto)).toEqual(
+        plainToInstance(NationalityResponseDto, mockData),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -67,9 +71,13 @@ describe('NationalitiesService', () => {
   describe('findAll', () => {
     it('should return an array of nationalities', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest
+        .spyOn(repository, 'find')
+        .mockResolvedValue(mockResult as Nationality[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(NationalityResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
@@ -84,9 +92,13 @@ describe('NationalitiesService', () => {
   describe('findOneById', () => {
     it('should return the nationality with the given id', async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest
+        .spyOn(repository, 'findOneBy')
+        .mockResolvedValue(mockData as Nationality);
 
-      expect(await service.findOneById(id)).toEqual(mockData);
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(NationalityResponseDto, mockData),
+      );
     });
 
     it('should throw NotFoundException if the nationality is not found', async () => {

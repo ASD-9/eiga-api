@@ -6,6 +6,9 @@ import { Artist } from './entities/artist.entity';
 import { JobsService } from '../jobs/jobs.service';
 import { NationalitiesService } from '../nationalities/nationalities.service';
 import { InternalServerErrorException } from '@nestjs/common';
+import { ArtistLightResponseDto } from './dto/artist-light-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { ArtistResponseDto } from './dto/artist-response';
 
 const mockData = {
   id: 1,
@@ -25,8 +28,6 @@ const mockData = {
       name: 'Nationality 1',
     },
   ],
-  jobs_ids: [1],
-  nationalities_ids: [1],
 };
 
 const mockData2 = {
@@ -47,8 +48,6 @@ const mockData2 = {
       name: 'Nationality 1',
     },
   ],
-  jobs_ids: [1],
-  nationalities_ids: [1],
 };
 
 describe('ArtistsController', () => {
@@ -91,17 +90,15 @@ describe('ArtistsController', () => {
       const file = { filename: 'artist1.jpg' };
       jest
         .spyOn(service, 'create')
-        .mockImplementation(() => Promise.resolve(mockData));
+        .mockResolvedValue(plainToInstance(ArtistLightResponseDto, mockData));
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      expect(await controller.create(createArtistDto, file as any)).toEqual({
-        ...mockData,
-        jobs_ids: undefined,
-        nationalities_ids: undefined,
-      });
+      expect(await controller.create(createArtistDto, file as any)).toEqual(
+        plainToInstance(ArtistLightResponseDto, mockData),
+      );
     });
 
-    it('should throw InternalServerErrorException if no file is uploaded', async () => {
+    it('should throw InternalServerErrorException if no file is uploaded', () => {
       const createArtistDto = {
         name: 'Artist 1',
         bio: 'Artist 1 bio',
@@ -111,10 +108,8 @@ describe('ArtistsController', () => {
       };
       const file = null;
 
-      await expect(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        controller.create(createArtistDto, file as any),
-      ).rejects.toThrow(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      expect(() => controller.create(createArtistDto, file as any)).toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
@@ -122,10 +117,25 @@ describe('ArtistsController', () => {
 
   describe('findAll', () => {
     it('should return an array of artists', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(ArtistLightResponseDto, [
+        mockData,
+        mockData2,
+      ]);
       jest.spyOn(service, 'findAll').mockResolvedValue(mockResult);
 
       expect(await controller.findAll()).toEqual(mockResult);
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return an artist', async () => {
+      jest
+        .spyOn(service, 'findOneById')
+        .mockResolvedValue(plainToInstance(ArtistResponseDto, mockData));
+
+      expect(await controller.findOneById(1)).toEqual(
+        plainToInstance(ArtistResponseDto, mockData),
+      );
     });
   });
 

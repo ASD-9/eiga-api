@@ -13,7 +13,6 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
 import { Role } from '../src/roles/entities/role.entity';
-import { plainToInstance } from 'class-transformer';
 
 const mockData = {
   id: 1,
@@ -31,30 +30,6 @@ const mockData2 = {
     id: 2,
     name: 'Admin',
   },
-};
-
-const mockRepoData = {
-  id: 1,
-  username: 'user1',
-  password: 'hashedPassword',
-  role: plainToInstance(Role, {
-    id: 1,
-    name: 'Super Admin',
-    users: [],
-  }),
-  role_id: 1,
-};
-
-const mockRepoData2 = {
-  id: 2,
-  username: 'user2',
-  password: 'hashedPassword',
-  role: plainToInstance(Role, {
-    id: 2,
-    name: 'Admin',
-    users: [],
-  }),
-  role_id: 2,
 };
 
 describe('Users', () => {
@@ -103,11 +78,11 @@ describe('Users', () => {
     it('should create a new user and return it with status 201', async () => {
       jest
         .spyOn(rolesRepository, 'findOneBy')
-        .mockResolvedValue(plainToInstance(Role, mockRepoData.role));
+        .mockResolvedValue(mockData.role as Role);
 
       jest
         .spyOn(repository, 'save')
-        .mockResolvedValue(plainToInstance(User, mockRepoData));
+        .mockResolvedValue({ ...mockData, password: 'hashedPassword' } as User);
 
       const createUserDto = {
         username: 'user1',
@@ -164,7 +139,7 @@ describe('Users', () => {
     it('should throw InternalServerErrorException with status 500', async () => {
       jest
         .spyOn(rolesRepository, 'findOneBy')
-        .mockResolvedValue(plainToInstance(Role, mockRepoData.role));
+        .mockResolvedValue(mockData.role as Role);
 
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
@@ -188,8 +163,11 @@ describe('Users', () => {
 
   describe('/users (GET)', () => {
     it('should return all users with status 200', () => {
-      const result = plainToInstance(User, [mockRepoData, mockRepoData2]);
-      jest.spyOn(repository, 'find').mockResolvedValue(result);
+      const result = [
+        { ...mockData, password: 'hashedPassword' },
+        { ...mockData2, password: 'hashedPassword' },
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result as User[]);
 
       return request(app.getHttpServer() as App)
         .get('/users')

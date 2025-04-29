@@ -9,6 +9,10 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { UserResponseDto } from '../users/dto/user-reponse.dto';
+import { plainToInstance } from 'class-transformer';
+import { ProfilResponseDto } from './dto/profil-response.dto';
+import { AvatarResponseDto } from '../avatars/dto/avatar-response.dto';
 
 const mockData = {
   id: 1,
@@ -17,9 +21,7 @@ const mockData = {
     id: 1,
     name: 'Avatar1',
     image_name: 'avatar1.jpg',
-    profils: [],
   },
-  avatar_id: 1,
   user: {
     id: 1,
     username: 'user1',
@@ -27,12 +29,8 @@ const mockData = {
     role: {
       id: 1,
       name: 'Super Admin',
-      users: [],
     },
-    role_id: 1,
-    profils: [],
   },
-  user_id: 1,
 };
 
 const mockData2 = {
@@ -44,7 +42,6 @@ const mockData2 = {
     image_name: 'avatar2.jpg',
     profils: [],
   },
-  avatar_id: 2,
   user: {
     id: 1,
     username: 'user1',
@@ -52,12 +49,8 @@ const mockData2 = {
     role: {
       id: 1,
       name: 'Super Admin',
-      users: [],
     },
-    role_id: 1,
-    profils: [],
   },
-  user_id: 1,
 };
 
 describe('ProfilsService', () => {
@@ -110,11 +103,15 @@ describe('ProfilsService', () => {
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar);
-      jest.spyOn(usersService, 'findOneById').mockResolvedValue(mockData.user);
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
+      jest
+        .spyOn(usersService, 'findOneById')
+        .mockResolvedValue(mockData.user as UserResponseDto);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Profil);
 
-      expect(await service.create(createProfilDto)).toEqual(mockData);
+      expect(await service.create(createProfilDto)).toEqual(
+        plainToInstance(ProfilResponseDto, mockData),
+      );
     });
 
     it('should throw NotFoundException if the avatar is not found', async () => {
@@ -142,7 +139,7 @@ describe('ProfilsService', () => {
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar);
+        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
       jest
         .spyOn(usersService, 'findOneById')
         .mockRejectedValue(new NotFoundException('Utilisateur 99 introuvable'));
@@ -161,8 +158,10 @@ describe('ProfilsService', () => {
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar);
-      jest.spyOn(usersService, 'findOneById').mockResolvedValue(mockData.user);
+        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
+      jest
+        .spyOn(usersService, 'findOneById')
+        .mockResolvedValue(mockData.user as UserResponseDto);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
       await expect(service.create(createProfilDto)).rejects.toThrow(
@@ -175,9 +174,11 @@ describe('ProfilsService', () => {
     it('should return an array of profils for the given user', async () => {
       const userId = 1;
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Profil[]);
 
-      expect(await service.findAllByUser(userId)).toEqual(mockResult);
+      expect(await service.findAllByUser(userId)).toEqual(
+        plainToInstance(ProfilResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {

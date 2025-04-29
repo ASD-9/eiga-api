@@ -36,11 +36,8 @@ describe('Roles', () => {
   });
 
   it('/roles (GET) should return all roles with status 200', () => {
-    const result = [
-      { ...mockData, users: [] },
-      { ...mockData2, users: [] },
-    ];
-    jest.spyOn(repository, 'find').mockResolvedValue(result);
+    const result = [mockData, mockData2];
+    jest.spyOn(repository, 'find').mockResolvedValue(result as Role[]);
 
     return request(app.getHttpServer() as App)
       .get('/roles')

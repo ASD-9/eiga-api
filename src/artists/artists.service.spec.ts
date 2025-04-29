@@ -11,6 +11,11 @@ import {
 } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
+import { JobResponseDto } from 'src/jobs/dto/job-response.dto';
+import { NationalityResponseDto } from 'src/nationalities/dto/nationality-response.dto';
+import { plainToInstance } from 'class-transformer';
+import { ArtistLightResponseDto } from './dto/artist-light-response.dto';
+import { ArtistResponseDto } from './dto/artist-response';
 
 const mockData = {
   id: 1,
@@ -30,8 +35,6 @@ const mockData = {
       name: 'Nationality 1',
     },
   ],
-  jobs_ids: [1],
-  nationalities_ids: [1],
 };
 
 const mockData2 = {
@@ -52,8 +55,6 @@ const mockData2 = {
       name: 'Nationality 1',
     },
   ],
-  jobs_ids: [1],
-  nationalities_ids: [1],
 };
 
 describe('ArtistsService', () => {
@@ -71,6 +72,7 @@ describe('ArtistsService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
@@ -111,15 +113,15 @@ describe('ArtistsService', () => {
 
       jest
         .spyOn(jobsService, 'findOneById')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(mockData.jobs[0] as JobResponseDto);
       jest
         .spyOn(nationalitiesService, 'findOneById')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(mockData.nationalities[0] as NationalityResponseDto);
 
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Artist);
 
       expect(await service.create(createArtistDto, imageName)).toEqual(
-        mockData,
+        plainToInstance(ArtistLightResponseDto, mockData),
       );
     });
 
@@ -192,15 +194,43 @@ describe('ArtistsService', () => {
   describe('findAll', () => {
     it('should return an arrray of artists', async () => {
       const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Artist[]);
 
-      expect(await service.findAll()).toEqual(mockResult);
+      expect(await service.findAll()).toEqual(
+        plainToInstance(ArtistLightResponseDto, mockResult),
+      );
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
       await expect(service.findAll()).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return the artist with the given id', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Artist);
+
+      expect(await service.findOneById(1)).toEqual(
+        plainToInstance(ArtistResponseDto, mockData),
+      );
+    });
+
+    it('should throw NotFoundException if the artist is not found', async () => {
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      await expect(service.findOneById(99)).rejects.toThrow(
+        new NotFoundException(`Artiste 99 introuvable`),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error());
+
+      await expect(service.findOneById(1)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });

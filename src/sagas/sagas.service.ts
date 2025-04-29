@@ -7,6 +7,8 @@ import { SagaDto } from './dto/saga.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Saga } from './entities/saga.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { SagaResponseDto } from './dto/saga-response.dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class SagasService {
@@ -15,9 +17,12 @@ export class SagasService {
     private sagasRepository: Repository<Saga>,
   ) {}
 
-  async create(createSagasDto: SagaDto): Promise<Saga> {
+  async create(createSagasDto: SagaDto): Promise<SagaResponseDto> {
     try {
-      return await this.sagasRepository.save(createSagasDto);
+      return plainToInstance(
+        SagaResponseDto,
+        await this.sagasRepository.save(createSagasDto),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -25,9 +30,12 @@ export class SagasService {
     }
   }
 
-  async findAll(): Promise<Saga[]> {
+  async findAll(): Promise<SagaResponseDto[]> {
     try {
-      return await this.sagasRepository.find();
+      return plainToInstance(
+        SagaResponseDto,
+        await this.sagasRepository.find(),
+      );
     } catch {
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',
@@ -35,13 +43,13 @@ export class SagasService {
     }
   }
 
-  async findOneById(id: number): Promise<Saga> {
+  async findOneById(id: number): Promise<SagaResponseDto> {
     try {
       const saga = await this.sagasRepository.findOneBy({ id });
       if (!saga) {
         throw new NotFoundException(`Saga ${id} introuvable`);
       }
-      return saga;
+      return plainToInstance(SagaResponseDto, saga);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

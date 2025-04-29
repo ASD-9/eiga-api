@@ -3,16 +3,18 @@ import { NationalitiesController } from './nationalities.controller';
 import { NationalitiesService } from './nationalities.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Nationality } from './entities/nationality.entity';
+import { plainToInstance } from 'class-transformer';
+import { NationalityResponseDto } from './dto/nationality-response.dto';
 
-const mockData = {
+const mockData = plainToInstance(NationalityResponseDto, {
   id: 1,
   name: 'Nationality 1',
-};
+});
 
-const mockData2 = {
+const mockData2 = plainToInstance(NationalityResponseDto, {
   id: 2,
   name: 'Nationality 2',
-};
+});
 
 describe('NationalitiesController', () => {
   let controller: NationalitiesController;

@@ -7,7 +7,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Exclude } from 'class-transformer';
 import { Saga } from '../../sagas/entities/saga.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Nationality } from '../../nationalities/entities/nationality.entity';
@@ -57,13 +56,4 @@ export class Movie {
     inverseJoinColumn: { name: 'nationality_id', referencedColumnName: 'id' },
   })
   nationalities: Nationality[];
-
-  @Exclude()
-  saga_id: number;
-
-  @Exclude()
-  categories_ids: number[];
-
-  @Exclude()
-  nationalities_ids: number[];
 }
