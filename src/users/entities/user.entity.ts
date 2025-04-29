@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { Role } from '../../roles/entities/role.entity';
 import {
   Column,
@@ -19,17 +18,12 @@ export class User {
   username: string;
 
   @Column()
-  @Exclude()
   password: string;
 
   @ManyToOne(() => Role, (role) => role.users, { eager: true })
   @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Exclude()
-  role_id: number;
-
   @OneToMany(() => Profil, (profil) => profil.user)
-  @Exclude()
   profils: Profil[];
 }

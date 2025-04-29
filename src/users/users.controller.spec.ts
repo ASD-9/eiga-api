@@ -4,31 +4,25 @@ import { UsersService } from './users.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { RolesService } from '../roles/roles.service';
+import { UserResponseDto } from './dto/user-reponse.dto';
 
 const mockData = {
   id: 1,
   username: 'user1',
-  password: 'hashedPassword',
   role: {
     id: 1,
     name: 'Super Admin',
-    users: [],
   },
-  role_id: 1,
-  profils: [],
 };
 
 const mockData2 = {
   id: 2,
   username: 'user2',
-  password: 'hashedPassword',
   role: {
     id: 2,
     name: 'Admin',
     users: [],
   },
-  role_id: 2,
-  profils: [],
 };
 
 describe('UsersController', () => {
@@ -64,14 +58,9 @@ describe('UsersController', () => {
       };
       jest
         .spyOn(service, 'create')
-        .mockImplementation(() => Promise.resolve(mockData));
+        .mockImplementation(() => Promise.resolve(mockData as UserResponseDto));
 
-      expect(await controller.create(createUserDto)).toEqual({
-        ...mockData,
-        password: undefined,
-        role_id: undefined,
-        profils: undefined,
-      });
+      expect(await controller.create(createUserDto)).toEqual(mockData);
     });
   });
 
@@ -80,7 +69,9 @@ describe('UsersController', () => {
       const mockResult = [mockData, mockData2];
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() => Promise.resolve(mockResult));
+        .mockImplementation(() =>
+          Promise.resolve(mockResult as UserResponseDto[]),
+        );
 
       expect(await controller.findAll()).toEqual(mockResult);
     });

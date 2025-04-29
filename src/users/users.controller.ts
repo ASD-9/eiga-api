@@ -12,9 +12,8 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
-import { plainToClass } from 'class-transformer';
+import { UserResponseDto } from './dto/user-reponse.dto';
 
 @Controller('users')
 export class UsersController {
@@ -22,12 +21,12 @@ export class UsersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
-    return plainToClass(User, await this.usersService.create(createUserDto));
+  create(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    return this.usersService.create(createUserDto);
   }
 
   @Get()
-  findAll(): Promise<User[]> {
+  findAll(): Promise<UserResponseDto[]> {
     return this.usersService.findAll();
   }
 
