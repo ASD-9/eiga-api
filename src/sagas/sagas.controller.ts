@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { SagasService } from './sagas.service';
 import { SagaDto } from './dto/saga.dto';
-import { Saga } from './entities/saga.entity';
 import { ParseIdPipe } from '../common/parse-id.pipe';
+import { SagaResponseDto } from './dto/saga-response.dto';
 
 @Controller('sagas')
 export class SagasController {
@@ -20,12 +20,12 @@ export class SagasController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createSagasDto: SagaDto): Promise<Saga> {
+  create(@Body() createSagasDto: SagaDto): Promise<SagaResponseDto> {
     return this.sagasService.create(createSagasDto);
   }
 
   @Get()
-  findAll(): Promise<Saga[]> {
+  findAll(): Promise<SagaResponseDto[]> {
     return this.sagasService.findAll();
   }
 

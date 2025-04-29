@@ -3,17 +3,16 @@ import { SagasController } from './sagas.controller';
 import { SagasService } from './sagas.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Saga } from './entities/saga.entity';
+import { SagaResponseDto } from './dto/saga-response.dto';
 
 const mockData = {
   id: 1,
   name: 'Saga 1',
-  movies: [],
 };
 
 const mockData2 = {
   id: 2,
   name: 'Saga 2',
-  movies: [],
 };
 
 describe('SagasController', () => {
@@ -39,7 +38,9 @@ describe('SagasController', () => {
   describe('create', () => {
     it('should return the created saga', async () => {
       const createSagaDto = { name: 'Saga 1' };
-      jest.spyOn(service, 'create').mockResolvedValue(mockData);
+      jest
+        .spyOn(service, 'create')
+        .mockResolvedValue(mockData as SagaResponseDto);
 
       expect(await controller.create(createSagaDto)).toEqual(mockData);
     });
@@ -50,7 +51,9 @@ describe('SagasController', () => {
       const mockResult = [mockData, mockData2];
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() => Promise.resolve(mockResult));
+        .mockImplementation(() =>
+          Promise.resolve(mockResult as SagaResponseDto[]),
+        );
 
       expect(await controller.findAll()).toBe(mockResult);
     });
