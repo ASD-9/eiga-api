@@ -179,7 +179,7 @@ describe('MovieArtistJob', () => {
         .expect(404)
         .expect({
           statusCode: 404,
-          message: 'Métier 99 introuvable',
+          message: 'Métier 99 introuvable',
           error: 'Not Found',
         });
     });
