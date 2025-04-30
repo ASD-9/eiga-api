@@ -10,16 +10,7 @@ import {
 import { UpdateResult } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { CategoryResponseDto } from './dto/category-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Category 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Category 2',
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('CategoriesService', () => {
   let service: CategoriesService;
@@ -49,7 +40,8 @@ describe('CategoriesService', () => {
   describe('create', () => {
     it('should create a new category and return it', async () => {
       const createCategoryDto = { name: 'Category 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Category);
+      const mockData = MockFactory.createMockCategory();
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createCategoryDto)).toEqual(
         plainToInstance(CategoryResponseDto, mockData),
@@ -68,10 +60,11 @@ describe('CategoriesService', () => {
 
   describe('findAll', () => {
     it('should return an array of categories', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(repository, 'find')
-        .mockResolvedValue(mockResult as Category[]);
+      const mockResult = [
+        MockFactory.createMockCategory(),
+        MockFactory.createMockCategory({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(CategoryResponseDto, mockResult),
@@ -89,10 +82,9 @@ describe('CategoriesService', () => {
 
   describe('findOneById', () => {
     it('should return the category with the given id', async () => {
+      const mockData = MockFactory.createMockCategory();
       const id = 1;
-      jest
-        .spyOn(repository, 'findOneBy')
-        .mockResolvedValue(mockData as Category);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(CategoryResponseDto, mockData),

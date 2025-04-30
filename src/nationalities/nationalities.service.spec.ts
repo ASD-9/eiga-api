@@ -10,16 +10,7 @@ import {
 import { UpdateResult } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { NationalityResponseDto } from './dto/nationality-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Nationality 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Nationality 2',
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('NationalitiesService', () => {
   let service: NationalitiesService;
@@ -51,7 +42,8 @@ describe('NationalitiesService', () => {
   describe('create', () => {
     it('should create a new nationality and return it', async () => {
       const createNationalityDto = { name: 'Nationality 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Nationality);
+      const mockData = MockFactory.createMockNationality();
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createNationalityDto)).toEqual(
         plainToInstance(NationalityResponseDto, mockData),
@@ -70,10 +62,11 @@ describe('NationalitiesService', () => {
 
   describe('findAll', () => {
     it('should return an array of nationalities', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(repository, 'find')
-        .mockResolvedValue(mockResult as Nationality[]);
+      const mockResult = [
+        MockFactory.createMockNationality(),
+        MockFactory.createMockNationality({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(NationalityResponseDto, mockResult),
@@ -91,10 +84,9 @@ describe('NationalitiesService', () => {
 
   describe('findOneById', () => {
     it('should return the nationality with the given id', async () => {
+      const mockData = MockFactory.createMockNationality();
       const id = 1;
-      jest
-        .spyOn(repository, 'findOneBy')
-        .mockResolvedValue(mockData as Nationality);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(NationalityResponseDto, mockData),

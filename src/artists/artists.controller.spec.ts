@@ -9,46 +9,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { ArtistLightResponseDto } from './dto/artist-light-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { ArtistResponseDto } from './dto/artist-response';
-
-const mockData = {
-  id: 1,
-  name: 'Artist 1',
-  image_name: 'artist1.jpg',
-  bio: 'Artist 1 bio',
-  birthday: new Date('1990-01-01'),
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Artist 2',
-  image_name: 'artist2.jpg',
-  bio: 'Artist 2 bio',
-  birthday: new Date('1990-01-01'),
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('ArtistsController', () => {
   let controller: ArtistsController;
@@ -80,32 +41,22 @@ describe('ArtistsController', () => {
 
   describe('create', () => {
     it('should return the created artist', async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createArtistDto = MockFactory.createMockCreateArtistDto();
       const file = { filename: 'artist1.jpg' };
-      jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(plainToInstance(ArtistLightResponseDto, mockData));
+      const mockData = plainToInstance(
+        ArtistLightResponseDto,
+        MockFactory.createMockArtist(),
+      );
+      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       expect(await controller.create(createArtistDto, file as any)).toEqual(
-        plainToInstance(ArtistLightResponseDto, mockData),
+        mockData,
       );
     });
 
     it('should throw InternalServerErrorException if no file is uploaded', () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createArtistDto = MockFactory.createMockCreateArtistDto();
       const file = null;
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -118,8 +69,8 @@ describe('ArtistsController', () => {
   describe('findAll', () => {
     it('should return an array of artists', async () => {
       const mockResult = plainToInstance(ArtistLightResponseDto, [
-        mockData,
-        mockData2,
+        MockFactory.createMockArtist(),
+        MockFactory.createMockArtist({ id: 2 }),
       ]);
       jest.spyOn(service, 'findAll').mockResolvedValue(mockResult);
 
@@ -129,13 +80,13 @@ describe('ArtistsController', () => {
 
   describe('findOneById', () => {
     it('should return an artist', async () => {
-      jest
-        .spyOn(service, 'findOneById')
-        .mockResolvedValue(plainToInstance(ArtistResponseDto, mockData));
-
-      expect(await controller.findOneById(1)).toEqual(
-        plainToInstance(ArtistResponseDto, mockData),
+      const mockData = plainToInstance(
+        ArtistResponseDto,
+        MockFactory.createMockArtist(),
       );
+      jest.spyOn(service, 'findOneById').mockResolvedValue(mockData);
+
+      expect(await controller.findOneById(1)).toEqual(mockData);
     });
   });
 

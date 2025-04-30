@@ -35,6 +35,9 @@ export class MovieLightResponseDto {
   nationalities: any[];
 
   @Exclude()
+  profils: any[];
+
+  @Exclude()
   saga_id: number;
 
   @Exclude()

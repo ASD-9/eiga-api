@@ -5,25 +5,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { RolesService } from '../roles/roles.service';
 import { UserResponseDto } from './dto/user-reponse.dto';
-
-const mockData = {
-  id: 1,
-  username: 'user1',
-  role: {
-    id: 1,
-    name: 'Super Admin',
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  username: 'user2',
-  role: {
-    id: 2,
-    name: 'Admin',
-    users: [],
-  },
-};
+import { MockFactory } from '../../test/mock-factory';
+import { plainToInstance } from 'class-transformer';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -51,14 +34,14 @@ describe('UsersController', () => {
 
   describe('create', () => {
     it('should return the created user', async () => {
-      const createUserDto = {
-        username: 'user1',
-        password: 'password1',
-        role_id: 1,
-      };
+      const createUserDto = MockFactory.createMockCreateUserDto();
+      const mockData = plainToInstance(
+        UserResponseDto,
+        MockFactory.createMockUser(),
+      );
       jest
         .spyOn(service, 'create')
-        .mockImplementation(() => Promise.resolve(mockData as UserResponseDto));
+        .mockImplementation(() => Promise.resolve(mockData));
 
       expect(await controller.create(createUserDto)).toEqual(mockData);
     });
@@ -66,12 +49,13 @@ describe('UsersController', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(UserResponseDto, [
+        MockFactory.createMockUser(),
+        MockFactory.createMockUser({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() =>
-          Promise.resolve(mockResult as UserResponseDto[]),
-        );
+        .mockImplementation(() => Promise.resolve(mockResult));
 
       expect(await controller.findAll()).toEqual(mockResult);
     });

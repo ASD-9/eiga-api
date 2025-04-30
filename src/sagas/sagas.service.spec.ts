@@ -10,16 +10,7 @@ import {
 import { UpdateResult } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { SagaResponseDto } from './dto/saga-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Saga 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Saga 2',
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('SagasService', () => {
   let service: SagasService;
@@ -49,7 +40,8 @@ describe('SagasService', () => {
   describe('create', () => {
     it('should create a new saga and return it', async () => {
       const createSagaDto = { name: 'Saga 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Saga);
+      const mockData = MockFactory.createMockSaga();
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createSagaDto)).toEqual(
         plainToInstance(SagaResponseDto, mockData),
@@ -68,8 +60,11 @@ describe('SagasService', () => {
 
   describe('findAll', () => {
     it('should return an array of sagas', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Saga[]);
+      const mockResult = [
+        MockFactory.createMockSaga(),
+        MockFactory.createMockSaga({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(SagaResponseDto, mockResult),
@@ -87,8 +82,9 @@ describe('SagasService', () => {
 
   describe('findOneById', () => {
     it('should return the saga with the given id', async () => {
+      const mockData = MockFactory.createMockSaga();
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Saga);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(SagaResponseDto, mockData),

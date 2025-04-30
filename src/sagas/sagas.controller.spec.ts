@@ -4,16 +4,8 @@ import { SagasService } from './sagas.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Saga } from './entities/saga.entity';
 import { SagaResponseDto } from './dto/saga-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Saga 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Saga 2',
-};
+import { MockFactory } from '../../test/mock-factory';
+import { plainToInstance } from 'class-transformer';
 
 describe('SagasController', () => {
   let controller: SagasController;
@@ -38,9 +30,11 @@ describe('SagasController', () => {
   describe('create', () => {
     it('should return the created saga', async () => {
       const createSagaDto = { name: 'Saga 1' };
-      jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(mockData as SagaResponseDto);
+      const mockData = plainToInstance(
+        SagaResponseDto,
+        MockFactory.createMockSaga(),
+      );
+      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createSagaDto)).toEqual(mockData);
     });
@@ -48,12 +42,13 @@ describe('SagasController', () => {
 
   describe('findAll', () => {
     it('should return an array of sagas', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(SagaResponseDto, [
+        MockFactory.createMockSaga(),
+        MockFactory.createMockSaga({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() =>
-          Promise.resolve(mockResult as SagaResponseDto[]),
-        );
+        .mockImplementation(() => Promise.resolve(mockResult));
 
       expect(await controller.findAll()).toBe(mockResult);
     });

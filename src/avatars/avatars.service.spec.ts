@@ -11,18 +11,7 @@ import { join } from 'path';
 import * as fs from 'fs';
 import { plainToInstance } from 'class-transformer';
 import { AvatarResponseDto } from './dto/avatar-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'avatar1',
-  image_name: 'avatar1.jpg',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'avatar2',
-  image_name: 'avatar2.jpg',
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('AvatarsService', () => {
   let service: AvatarsService;
@@ -54,7 +43,8 @@ describe('AvatarsService', () => {
     it('should create a new avatar and return it', async () => {
       const createAvatarDto = { name: 'avatar1' };
       const imageName = 'avatar1.jpg';
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Avatar);
+      const mockData = MockFactory.createMockAvatar();
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createAvatarDto, imageName)).toEqual(
         plainToInstance(AvatarResponseDto, mockData),
@@ -74,8 +64,11 @@ describe('AvatarsService', () => {
 
   describe('findAll', () => {
     it('should return an array of avatars', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Avatar[]);
+      const mockResult = [
+        MockFactory.createMockAvatar(),
+        MockFactory.createMockAvatar({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(AvatarResponseDto, mockResult),
@@ -93,8 +86,9 @@ describe('AvatarsService', () => {
 
   describe('findOneById', () => {
     it('should return the avatar with the given id', async () => {
+      const mockData = MockFactory.createMockAvatar();
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Avatar);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(AvatarResponseDto, mockData),

@@ -6,26 +6,8 @@ import { Profil } from './entities/profil.entity';
 import { AvatarsService } from '../avatars/avatars.service';
 import { UsersService } from '../users/users.service';
 import { ProfilResponseDto } from './dto/profil-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Profil1',
-  avatar: {
-    id: 1,
-    name: 'Avatar1',
-    image_name: 'avatar1.jpg',
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Profil2',
-  avatar: {
-    id: 2,
-    name: 'Avatar2',
-    image_name: 'avatar2.jpg',
-  },
-};
+import { MockFactory } from '../../test/mock-factory';
+import { plainToInstance } from 'class-transformer';
 
 describe('ProfilsController', () => {
   let controller: ProfilsController;
@@ -57,14 +39,12 @@ describe('ProfilsController', () => {
 
   describe('create', () => {
     it('should return the created user', async () => {
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
-        user_id: 1,
-      };
-      jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(mockData as ProfilResponseDto);
+      const createProfilDto = MockFactory.createMockCreateProfilDto();
+      const mockData = plainToInstance(
+        ProfilResponseDto,
+        MockFactory.createMockProfil(),
+      );
+      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createProfilDto)).toEqual(mockData);
     });
@@ -72,16 +52,13 @@ describe('ProfilsController', () => {
 
   describe('findAllByUser', () => {
     it('should return an array of profils for the given user', async () => {
-      const userId = 1;
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(service, 'findAllByUser')
-        .mockResolvedValue(mockResult as ProfilResponseDto[]);
-
-      expect(await controller.findAllByUser(userId)).toEqual([
-        mockData,
-        mockData2,
+      const mockResult = plainToInstance(ProfilResponseDto, [
+        MockFactory.createMockProfil(),
+        MockFactory.createMockProfil({ id: 2 }),
       ]);
+      jest.spyOn(service, 'findAllByUser').mockResolvedValue(mockResult);
+
+      expect(await controller.findAllByUser(1)).toEqual(mockResult);
     });
   });
 

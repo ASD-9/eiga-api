@@ -13,24 +13,9 @@ import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
 import { Role } from '../src/roles/entities/role.entity';
-
-const mockData = {
-  id: 1,
-  username: 'user1',
-  role: {
-    id: 1,
-    name: 'Super Admin',
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  username: 'user2',
-  role: {
-    id: 2,
-    name: 'Admin',
-  },
-};
+import { MockFactory } from './mock-factory';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserResponseDto } from '../src/users/dto/user-reponse.dto';
 
 describe('Users', () => {
   let app: INestApplication;
@@ -76,32 +61,25 @@ describe('Users', () => {
 
   describe('/users (POST)', () => {
     it('should create a new user and return it with status 201', async () => {
-      jest
-        .spyOn(rolesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.role as Role);
+      const createUserDto = MockFactory.createMockCreateUserDto();
+      const mockData = MockFactory.createMockUser();
 
-      jest
-        .spyOn(repository, 'save')
-        .mockResolvedValue({ ...mockData, password: 'hashedPassword' } as User);
+      jest.spyOn(rolesRepository, 'findOneBy').mockResolvedValue(mockData.role);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
-      const createUserDto = {
-        username: 'user1',
-        password: 'Password1!',
-        role_id: 1,
-      };
+      const responseData = plainToInstance(UserResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/users')
         .send(createUserDto)
         .expect(201)
-        .expect(mockData);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
-      const createUserDto = {
-        username: 'user1',
-        password: 'Password1!',
-      };
+      const createUserDto = MockFactory.createMockCreateUserDto({
+        role_id: undefined,
+      });
 
       return request(app.getHttpServer() as App)
         .post('/users')
@@ -117,13 +95,11 @@ describe('Users', () => {
     });
 
     it('should throw NotFoundException if the role is not found', async () => {
-      jest.spyOn(rolesRepository, 'findOneBy').mockResolvedValue(null);
-
-      const createUserDto = {
-        username: 'user1',
-        password: 'Password1!',
+      const createUserDto = MockFactory.createMockCreateUserDto({
         role_id: 99,
-      };
+      });
+
+      jest.spyOn(rolesRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/users')
@@ -137,17 +113,11 @@ describe('Users', () => {
     });
 
     it('should throw InternalServerErrorException with status 500', async () => {
-      jest
-        .spyOn(rolesRepository, 'findOneBy')
-        .mockResolvedValue(mockData.role as Role);
+      const createUserDto = MockFactory.createMockCreateUserDto();
+      const mockRole = MockFactory.createMockRole();
 
+      jest.spyOn(rolesRepository, 'findOneBy').mockResolvedValue(mockRole);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
-
-      const createUserDto = {
-        username: 'user1',
-        password: 'Password1!',
-        role_id: 1,
-      };
 
       return request(app.getHttpServer() as App)
         .post('/users')
@@ -164,15 +134,17 @@ describe('Users', () => {
   describe('/users (GET)', () => {
     it('should return all users with status 200', () => {
       const result = [
-        { ...mockData, password: 'hashedPassword' },
-        { ...mockData2, password: 'hashedPassword' },
+        MockFactory.createMockUser(),
+        MockFactory.createMockUser(),
       ];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as User[]);
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(UserResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/users')
         .expect(200)
-        .expect([mockData, mockData2]);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException with status 500', async () => {

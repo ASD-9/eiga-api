@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { CategoryResponseDto } from '../../categories/dto/category-response.dto';
 import { SagaResponseDto } from '../../sagas/dto/saga-response.dto';
 
@@ -35,4 +35,7 @@ export class MovieResponseDto {
 
   @Expose()
   nationalities: any[];
+
+  @Exclude()
+  profils: any[];
 }

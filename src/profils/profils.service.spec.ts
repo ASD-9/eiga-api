@@ -13,45 +13,7 @@ import { UserResponseDto } from '../users/dto/user-reponse.dto';
 import { plainToInstance } from 'class-transformer';
 import { ProfilResponseDto } from './dto/profil-response.dto';
 import { AvatarResponseDto } from '../avatars/dto/avatar-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Profil1',
-  avatar: {
-    id: 1,
-    name: 'Avatar1',
-    image_name: 'avatar1.jpg',
-  },
-  user: {
-    id: 1,
-    username: 'user1',
-    password: 'hashedPassword',
-    role: {
-      id: 1,
-      name: 'Super Admin',
-    },
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Profil2',
-  avatar: {
-    id: 2,
-    name: 'Avatar2',
-    image_name: 'avatar2.jpg',
-    profils: [],
-  },
-  user: {
-    id: 1,
-    username: 'user1',
-    password: 'hashedPassword',
-    role: {
-      id: 1,
-      name: 'Super Admin',
-    },
-  },
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('ProfilsService', () => {
   let service: ProfilsService;
@@ -95,19 +57,16 @@ describe('ProfilsService', () => {
 
   describe('create', () => {
     it('should create a new profil and return it', async () => {
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
-        user_id: 1,
-      };
+      const createProfilDto = MockFactory.createMockCreateProfilDto();
+      const mockData = MockFactory.createMockProfil();
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
+        .mockResolvedValue(plainToInstance(AvatarResponseDto, mockData.avatar));
       jest
         .spyOn(usersService, 'findOneById')
-        .mockResolvedValue(mockData.user as UserResponseDto);
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Profil);
+        .mockResolvedValue(plainToInstance(UserResponseDto, mockData.user));
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createProfilDto)).toEqual(
         plainToInstance(ProfilResponseDto, mockData),
@@ -115,11 +74,9 @@ describe('ProfilsService', () => {
     });
 
     it('should throw NotFoundException if the avatar is not found', async () => {
-      const createProfilDto = {
-        name: 'Profil1',
+      const createProfilDto = MockFactory.createMockCreateProfilDto({
         avatar_id: 99,
-        user_id: 1,
-      };
+      });
 
       jest
         .spyOn(avatarsService, 'findOneById')
@@ -131,15 +88,14 @@ describe('ProfilsService', () => {
     });
 
     it('should throw NotFoundException if the user is not found', async () => {
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 99,
-        user_id: 1,
-      };
+      const createProfilDto = MockFactory.createMockCreateProfilDto({
+        user_id: 99,
+      });
+      const avatar = MockFactory.createMockAvatar();
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
+        .mockResolvedValue(plainToInstance(AvatarResponseDto, avatar));
       jest
         .spyOn(usersService, 'findOneById')
         .mockRejectedValue(new NotFoundException('Utilisateur 99 introuvable'));
@@ -150,18 +106,15 @@ describe('ProfilsService', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
-        user_id: 1,
-      };
+      const createProfilDto = MockFactory.createMockCreateProfilDto();
+      const mockData = MockFactory.createMockProfil();
 
       jest
         .spyOn(avatarsService, 'findOneById')
-        .mockResolvedValue(mockData.avatar as AvatarResponseDto);
+        .mockResolvedValue(plainToInstance(AvatarResponseDto, mockData.avatar));
       jest
         .spyOn(usersService, 'findOneById')
-        .mockResolvedValue(mockData.user as UserResponseDto);
+        .mockResolvedValue(plainToInstance(UserResponseDto, mockData.user));
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
       await expect(service.create(createProfilDto)).rejects.toThrow(
@@ -172,11 +125,13 @@ describe('ProfilsService', () => {
 
   describe('findAllByUser', () => {
     it('should return an array of profils for the given user', async () => {
-      const userId = 1;
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Profil[]);
+      const mockResult = [
+        MockFactory.createMockProfil(),
+        MockFactory.createMockProfil({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
-      expect(await service.findAllByUser(userId)).toEqual(
+      expect(await service.findAllByUser(1)).toEqual(
         plainToInstance(ProfilResponseDto, mockResult),
       );
     });

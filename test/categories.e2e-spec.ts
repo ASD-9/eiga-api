@@ -12,16 +12,9 @@ import { Category } from '../src/categories/entities/category.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
-
-const mockData = {
-  id: 1,
-  name: 'Category 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Category 2',
-};
+import { MockFactory } from './mock-factory';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { CategoryResponseDto } from '../src/categories/dto/category-response.dto';
 
 describe('Categories', () => {
   let app: INestApplication;
@@ -65,17 +58,20 @@ describe('Categories', () => {
 
   describe('/categories (POST)', () => {
     it('should create a new category and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Category);
-
       const createCategoryDto = {
         name: 'Category 1',
       };
+      const mockData = MockFactory.createMockCategory();
+
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(CategoryResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/categories')
         .send(createCategoryDto)
         .expect(201)
-        .expect(mockData);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
@@ -114,15 +110,18 @@ describe('Categories', () => {
 
   describe('/categories (GET)', () => {
     it('should return all categories with status 200', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(repository, 'find')
-        .mockResolvedValue(mockResult as Category[]);
+      const mockResult = [
+        MockFactory.createMockCategory(),
+        MockFactory.createMockCategory({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+
+      const responseData = plainToInstance(CategoryResponseDto, mockResult);
 
       return request(app.getHttpServer() as App)
         .get('/categories')
         .expect(200)
-        .expect(mockResult);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {

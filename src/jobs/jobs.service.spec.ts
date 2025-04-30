@@ -10,16 +10,7 @@ import {
 import { UpdateResult } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { JobResponseDto } from './dto/job-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Job 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Job 2',
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('JobsService', () => {
   let service: JobsService;
@@ -49,7 +40,8 @@ describe('JobsService', () => {
   describe('create', () => {
     it('should create a new job and return it', async () => {
       const createJobDto = { name: 'Job 1' };
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Job);
+      const mockData = MockFactory.createMockJob();
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createJobDto)).toEqual(
         plainToInstance(JobResponseDto, mockData),
@@ -68,8 +60,11 @@ describe('JobsService', () => {
 
   describe('findAll', () => {
     it('should return an array of jobs', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Job[]);
+      const mockResult = [
+        MockFactory.createMockJob(),
+        MockFactory.createMockJob({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(JobResponseDto, mockResult),
@@ -87,8 +82,9 @@ describe('JobsService', () => {
 
   describe('findOneById', () => {
     it('should return the job with the given id', async () => {
+      const mockData = MockFactory.createMockJob();
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Job);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(JobResponseDto, mockData),

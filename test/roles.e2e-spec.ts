@@ -6,16 +6,9 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Role } from '../src/roles/entities/role.entity';
 import { Repository } from 'typeorm';
 import { App } from 'supertest/types';
-
-const mockData = {
-  id: 1,
-  name: 'Super Admin',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Admin',
-};
+import { MockFactory } from './mock-factory';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { RoleResponseDto } from '../src/roles/dto/role-response.dto';
 
 describe('Roles', () => {
   let app: INestApplication;
@@ -36,13 +29,18 @@ describe('Roles', () => {
   });
 
   it('/roles (GET) should return all roles with status 200', () => {
-    const result = [mockData, mockData2];
-    jest.spyOn(repository, 'find').mockResolvedValue(result as Role[]);
+    const result = [
+      MockFactory.createMockRole({ id: 1 }),
+      MockFactory.createMockRole({ id: 2 }),
+    ];
+    jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+    const responseData = plainToInstance(RoleResponseDto, result);
 
     return request(app.getHttpServer() as App)
       .get('/roles')
       .expect(200)
-      .expect(result);
+      .expect(instanceToPlain(responseData));
   });
 
   it('/roles (GET) should throw InternalServerErrorException with status 500', async () => {

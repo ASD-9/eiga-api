@@ -5,16 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Job } from './entities/job.entity';
 import { plainToInstance } from 'class-transformer';
 import { JobResponseDto } from './dto/job-response.dto';
-
-const mockData = plainToInstance(JobResponseDto, {
-  id: 1,
-  name: 'Job 1',
-});
-
-const mockData2 = plainToInstance(JobResponseDto, {
-  id: 2,
-  name: 'Job 2',
-});
+import { MockFactory } from '../../test/mock-factory';
 
 describe('JobsController', () => {
   let controller: JobsController;
@@ -39,6 +30,10 @@ describe('JobsController', () => {
   describe('create', () => {
     it('should return the created job', async () => {
       const createJobDto = { name: 'Job 1' };
+      const mockData = plainToInstance(
+        JobResponseDto,
+        MockFactory.createMockJob(),
+      );
       jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createJobDto)).toEqual(mockData);
@@ -47,7 +42,10 @@ describe('JobsController', () => {
 
   describe('findAll', () => {
     it('should return an array of jobs', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(JobResponseDto, [
+        MockFactory.createMockJob(),
+        MockFactory.createMockJob({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
         .mockImplementation(() => Promise.resolve(mockResult));

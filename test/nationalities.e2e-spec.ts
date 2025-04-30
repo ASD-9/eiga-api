@@ -12,16 +12,9 @@ import { Nationality } from '../src/nationalities/entities/nationality.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
-
-const mockData = {
-  id: 1,
-  name: 'Nationality 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Nationality 2',
-};
+import { MockFactory } from './mock-factory';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { NationalityResponseDto } from '../src/nationalities/dto/nationality-response.dto';
 
 describe('Nationalities', () => {
   let app: INestApplication;
@@ -65,17 +58,20 @@ describe('Nationalities', () => {
 
   describe('/nationalities (POST)', () => {
     it('should create a new nationality and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Nationality);
-
       const createNationalityDto = {
         name: 'Nationality 1',
       };
+      const mockData = MockFactory.createMockNationality();
+
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(NationalityResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/nationalities')
         .send(createNationalityDto)
         .expect(201)
-        .expect(mockData);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
@@ -114,15 +110,18 @@ describe('Nationalities', () => {
 
   describe('/nationalities (GET)', () => {
     it('should return all nationalities with status 200', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(repository, 'find')
-        .mockResolvedValue(mockResult as Nationality[]);
+      const mockResult = [
+        MockFactory.createMockNationality(),
+        MockFactory.createMockNationality({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+
+      const responseData = plainToInstance(NationalityResponseDto, mockResult);
 
       return request(app.getHttpServer() as App)
         .get('/nationalities')
         .expect(200)
-        .expect(mockResult);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {

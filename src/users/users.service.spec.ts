@@ -11,31 +11,12 @@ import { RolesService } from '../roles/roles.service';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from './dto/user-reponse.dto';
 import { RoleResponseDto } from '../roles/dto/role-response.dto';
+import { MockFactory } from '../../test/mock-factory';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn().mockResolvedValue('fakeSalt'),
   hash: jest.fn().mockResolvedValue('hashedPassword'),
 }));
-
-const mockData = {
-  id: 1,
-  username: 'user1',
-  password: 'hashedPassword',
-  role: {
-    id: 1,
-    name: 'Super Admin',
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  username: 'user2',
-  password: 'hashedPassword',
-  role: {
-    id: 2,
-    name: 'Admin',
-  },
-};
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -72,16 +53,13 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('should create a new user and return it', async () => {
-      const createUserDto = {
-        username: 'user1',
-        password: 'password1',
-        role_id: 1,
-      };
+      const createUserDto = MockFactory.createMockCreateUserDto();
+      const mockData = MockFactory.createMockUser();
 
       jest
         .spyOn(rolesService, 'findOneById')
-        .mockResolvedValue(mockData.role as RoleResponseDto);
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as User);
+        .mockResolvedValue(plainToInstance(RoleResponseDto, mockData.role));
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createUserDto)).toEqual(
         plainToInstance(UserResponseDto, mockData),
@@ -89,11 +67,9 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException if the role is not found', async () => {
-      const createUserDto = {
-        username: 'user1',
-        password: 'password1',
+      const createUserDto = MockFactory.createMockCreateUserDto({
         role_id: 99,
-      };
+      });
 
       jest
         .spyOn(rolesService, 'findOneById')
@@ -105,15 +81,12 @@ describe('UsersService', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      const createUserDto = {
-        username: 'user1',
-        password: 'password1',
-        role_id: 1,
-      };
+      const createUserDto = MockFactory.createMockCreateUserDto();
+      const mockData = MockFactory.createMockUser();
 
       jest
         .spyOn(rolesService, 'findOneById')
-        .mockResolvedValue(mockData.role as RoleResponseDto);
+        .mockResolvedValue(plainToInstance(RoleResponseDto, mockData.role));
       jest.spyOn(repository, 'save').mockRejectedValue(new Error('Error'));
 
       await expect(service.create(createUserDto)).rejects.toThrow(
@@ -124,8 +97,11 @@ describe('UsersService', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as User[]);
+      const mockResult = [
+        MockFactory.createMockUser(),
+        MockFactory.createMockUser({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(UserResponseDto, mockResult),
@@ -143,8 +119,9 @@ describe('UsersService', () => {
 
   describe('findOneById', () => {
     it('should return the user with the given id', async () => {
+      const mockData = MockFactory.createMockUser();
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as User);
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(UserResponseDto, mockData),
@@ -200,20 +177,18 @@ describe('UsersService', () => {
     it('should update the role of the user with the given id', async () => {
       const id = 1;
       const updateUserDto = { role_id: 1 };
+      const mockRole = MockFactory.createMockRole();
       const mockUpdate = jest
         .spyOn(repository, 'update')
         .mockResolvedValue({ affected: 1 } as UpdateResult);
       jest
         .spyOn(rolesService, 'findOneById')
-        .mockResolvedValue(mockData.role as RoleResponseDto);
+        .mockResolvedValue(plainToInstance(RoleResponseDto, mockRole));
 
       await service.update(id, updateUserDto);
 
       expect(mockUpdate).toHaveBeenCalledWith(id, {
-        role: {
-          id: 1,
-          name: 'Super Admin',
-        },
+        role: mockRole,
       });
     });
 
