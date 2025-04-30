@@ -12,16 +12,9 @@ import { Saga } from '../src/sagas/entities/saga.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
-
-const mockData = {
-  id: 1,
-  name: 'Saga 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Saga 2',
-};
+import { MockFactory } from './mock-factory';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { SagaResponseDto } from '../src/sagas/dto/saga-response.dto';
 
 describe('Sagas', () => {
   let app: INestApplication;
@@ -63,17 +56,20 @@ describe('Sagas', () => {
 
   describe('/sagas (POST)', () => {
     it('should create a new saga and return it with status 201', async () => {
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Saga);
-
       const createSageDto = {
         name: 'Saga 1',
       };
+      const mockData = MockFactory.createMockSaga();
+
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(SagaResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/sagas')
         .send(createSageDto)
         .expect(201)
-        .expect(mockData);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
@@ -110,13 +106,18 @@ describe('Sagas', () => {
 
   describe('/sagas (GET)', () => {
     it('should return all sagas with status 200', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Saga[]);
+      const mockResult = [
+        MockFactory.createMockSaga(),
+        MockFactory.createMockSaga({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+
+      const responseData = plainToInstance(SagaResponseDto, mockResult);
 
       return request(app.getHttpServer() as App)
         .get('/sagas')
         .expect(200)
-        .expect(mockResult);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {

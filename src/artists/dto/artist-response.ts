@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { JobResponseDto } from '../../jobs/dto/job-response.dto';
 import { NationalityResponseDto } from '../../nationalities/dto/nationality-response.dto';
 

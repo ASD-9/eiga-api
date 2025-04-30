@@ -4,16 +4,8 @@ import { CategoriesService } from './categories.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
 import { CategoryResponseDto } from './dto/category-response.dto';
-
-const mockData = {
-  id: 1,
-  name: 'Category 1',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Category 2',
-};
+import { MockFactory } from '../../test/mock-factory';
+import { plainToInstance } from 'class-transformer';
 
 describe('CategoriesController', () => {
   let controller: CategoriesController;
@@ -38,9 +30,11 @@ describe('CategoriesController', () => {
   describe('create', () => {
     it('should return the created category', async () => {
       const createCategoryDto = { name: 'Category 1' };
-      jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(mockData as CategoryResponseDto);
+      const mockData = plainToInstance(
+        CategoryResponseDto,
+        MockFactory.createMockCategory(),
+      );
+      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createCategoryDto)).toEqual(mockData);
     });
@@ -48,12 +42,13 @@ describe('CategoriesController', () => {
 
   describe('findAll', () => {
     it('should return an array of categories', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(CategoryResponseDto, [
+        MockFactory.createMockCategory(),
+        MockFactory.createMockCategory({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
-        .mockImplementation(() =>
-          Promise.resolve(mockResult as CategoryResponseDto[]),
-        );
+        .mockImplementation(() => Promise.resolve(mockResult));
 
       expect(await controller.findAll()).toBe(mockResult);
     });

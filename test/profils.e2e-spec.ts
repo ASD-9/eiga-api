@@ -15,36 +15,9 @@ import { User } from '../src/users/entities/user.entity';
 import { ValidationError } from 'class-validator';
 import { App } from 'supertest/types';
 import { Role } from '../src/roles/entities/role.entity';
-
-const mockData = {
-  id: 1,
-  name: 'Profil1',
-  avatar: {
-    id: 1,
-    name: 'Avatar1',
-    image_name: 'avatar1.jpg',
-  },
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Profil2',
-  avatar: {
-    id: 2,
-    name: 'Avatar2',
-    image_name: 'avatar2.jpg',
-  },
-};
-
-const user = {
-  id: 1,
-  username: 'user1',
-  password: 'hashedPassword',
-  role: {
-    id: 1,
-    name: 'Super Admin',
-  },
-};
+import { MockFactory } from './mock-factory';
+import { ProfilResponseDto } from '../src/profils/dto/profil-response.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 describe('Profils', () => {
   let app: INestApplication;
@@ -98,23 +71,22 @@ describe('Profils', () => {
 
   describe('/profils (POST', () => {
     it('should create a new profil and return it with status 201', async () => {
+      const createProfilDto = MockFactory.createMockCreateProfilDto();
+      const mockData = MockFactory.createMockProfil();
+
       jest
         .spyOn(avatarsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.avatar as Avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(user as User);
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Profil);
+        .mockResolvedValue(mockData.avatar);
+      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(mockData.user);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
-        user_id: 1,
-      };
+      const responseData = plainToInstance(ProfilResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/profils')
         .send(createProfilDto)
         .expect(201)
-        .expect(mockData);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the data are not valid', async () => {
@@ -133,14 +105,12 @@ describe('Profils', () => {
         });
     });
 
-    it('should throw BadRequestException if the avatar is not found', async () => {
-      jest.spyOn(avatarsRepository, 'findOneBy').mockResolvedValue(null);
-
-      const createProfilDto = {
-        name: 'Profil1',
+    it('should throw NotFoundException if the avatar is not found', async () => {
+      const createProfilDto = MockFactory.createMockCreateProfilDto({
         avatar_id: 99,
-        user_id: 1,
-      };
+      });
+
+      jest.spyOn(avatarsRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/profils')
@@ -154,16 +124,13 @@ describe('Profils', () => {
     });
 
     it('should throw NotFoundException if the user is not found', async () => {
-      jest
-        .spyOn(avatarsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.avatar as Avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
-
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
+      const createProfilDto = MockFactory.createMockCreateProfilDto({
         user_id: 99,
-      };
+      });
+      const avatar = MockFactory.createMockAvatar();
+
+      jest.spyOn(avatarsRepository, 'findOneBy').mockResolvedValue(avatar);
+      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/profils')
@@ -177,17 +144,14 @@ describe('Profils', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
+      const createProfilDto = MockFactory.createMockCreateProfilDto();
+      const mockData = MockFactory.createMockProfil();
+
       jest
         .spyOn(avatarsRepository, 'findOneBy')
-        .mockResolvedValue(mockData.avatar as Avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(user as User);
+        .mockResolvedValue(mockData.avatar);
+      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(mockData.user);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
-
-      const createProfilDto = {
-        name: 'Profil1',
-        avatar_id: 1,
-        user_id: 1,
-      };
 
       return request(app.getHttpServer() as App)
         .post('/profils')
@@ -203,13 +167,18 @@ describe('Profils', () => {
 
   describe('/profils/user/:user-id (GET)', () => {
     it('should return all profils for the given user', async () => {
-      const result = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as Profil[]);
+      const result = [
+        MockFactory.createMockProfil(),
+        MockFactory.createMockProfil({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(ProfilResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/profils/user/1')
         .expect(200)
-        .expect(result);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the userId is not valid', async () => {

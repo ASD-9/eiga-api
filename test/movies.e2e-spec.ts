@@ -4,7 +4,6 @@ import {
   BadRequestException,
   ClassSerializerInterceptor,
   INestApplication,
-  NotFoundException,
   ValidationPipe,
 } from '@nestjs/common';
 import { MoviesModule } from '../src/movies/movies.module';
@@ -18,42 +17,10 @@ import { Category } from '../src/categories/entities/category.entity';
 import { Nationality } from '../src/nationalities/entities/nationality.entity';
 import { join } from 'path';
 import * as fs from 'fs';
-
-const lightMockData = {
-  id: 1,
-  title: 'Movie 1',
-  image_name: 'image1.jpg',
-};
-
-const detailsMockData = {
-  synopsis: 'Synopsis 1',
-  duration: 120,
-  trailer_url: 'https://example.com/trailer1',
-  release_date: '2014-01-01T00:00:00.000Z',
-  video_name: 'video1.mp4',
-  saga: {
-    id: 1,
-    name: 'Saga 1',
-  },
-  categories: [
-    {
-      id: 1,
-      name: 'Category 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
-
-const lightMockData2 = {
-  id: 2,
-  title: 'Movie 2',
-  image_name: 'image2.jpg',
-};
+import { MockFactory } from './mock-factory';
+import { MovieLightResponseDto } from '../src/movies/dto/movie-light-response.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { MovieResponseDto } from '../src/movies/dto/movie-response.dto';
 
 describe('Movies', () => {
   let app: INestApplication;
@@ -144,39 +111,27 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.saga as Saga);
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
+      const mockData = MockFactory.createMockMovie();
+
+      jest.spyOn(sagasRepository, 'findOneBy').mockResolvedValue(mockData.saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.categories[0] as Category);
+        .mockResolvedValue(mockData.categories[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
-      jest.spyOn(repository, 'save').mockResolvedValue({
-        ...lightMockData,
-        ...detailsMockData,
-        release_date: new Date('2014-01-01'),
-      } as Movie);
+        .mockResolvedValue(mockData.nationalities[0]);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const responseData = plainToInstance(MovieLightResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(201)
-        .expect(lightMockData)
+        .expect(instanceToPlain(responseData))
         .then(() => {
           fs.unlinkSync(testImageFilePath);
           fs.unlinkSync(testVideoFilePath);
@@ -189,22 +144,13 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(400)
         .expect({
           statusCode: 400,
@@ -223,22 +169,13 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(400)
         .expect({
           statusCode: 400,
@@ -256,21 +193,12 @@ describe('Movies', () => {
       const testImageFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(500)
         .expect({
           statusCode: 500,
@@ -286,21 +214,12 @@ describe('Movies', () => {
       const testVideoFilePath = join(process.cwd(), 'tmp', 'test.mp4');
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(500)
         .expect({
           statusCode: 500,
@@ -318,21 +237,15 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-      };
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData({
+        nationalities_ids: [],
+      });
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(400)
         .expect({
           message: 'Erreur de validation',
@@ -354,26 +267,17 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(sagasRepository, 'findOneBy')
-        .mockRejectedValue(new NotFoundException('Saga 99 introuvable'));
-
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData({
         saga_id: 99,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      });
+
+      jest.spyOn(sagasRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(404)
         .expect({
           statusCode: 404,
@@ -392,33 +296,23 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.saga as Saga);
-      jest
-        .spyOn(categoriesRepository, 'findOneBy')
-        .mockRejectedValue(new NotFoundException('Catégorie 99 introuvable'));
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData({
+        categories_ids: 99,
+      });
+      const saga = MockFactory.createMockSaga();
 
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [99],
-        nationalities_ids: [1],
-      };
+      jest.spyOn(sagasRepository, 'findOneBy').mockResolvedValue(saga);
+      jest.spyOn(categoriesRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(404)
         .expect({
           statusCode: 404,
-          message: 'Catégorie 99 introuvable',
+          message: 'Catégorie 99 introuvable',
           error: 'Not Found',
         })
         .then(() => {
@@ -433,36 +327,26 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.saga as Saga);
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData({
+        nationalities_ids: 99,
+      });
+      const mockData = MockFactory.createMockMovie();
+
+      jest.spyOn(sagasRepository, 'findOneBy').mockResolvedValue(mockData.saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.categories[0] as Category);
-      jest
-        .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockRejectedValue(new NotFoundException('Nationalité 99 introuvable'));
-
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [99],
-      };
+        .mockResolvedValue(mockData.categories[0]);
+      jest.spyOn(nationalitiesRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(404)
         .expect({
           statusCode: 404,
-          message: 'Nationalité 99 introuvable',
+          message: 'Nationalité 99 introuvable',
           error: 'Not Found',
         })
         .then(() => {
@@ -477,33 +361,23 @@ describe('Movies', () => {
       fs.writeFileSync(testImageFilePath, Buffer.alloc(1024));
       fs.writeFileSync(testVideoFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(sagasRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.saga as Saga);
+      const createMovieFormData = MockFactory.createMockCreateMovieFormData();
+      const mockData = MockFactory.createMockMovie();
+
+      jest.spyOn(sagasRepository, 'findOneBy').mockResolvedValue(mockData.saga);
       jest
         .spyOn(categoriesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.categories[0] as Category);
+        .mockResolvedValue(mockData.categories[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
+        .mockResolvedValue(mockData.nationalities[0]);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error('Error'));
-
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: '2014-01-01',
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
 
       return request(app.getHttpServer() as App)
         .post('/movies')
         .attach('video', testVideoFilePath)
         .attach('image', testImageFilePath)
-        .field(createMovieDto)
+        .field(createMovieFormData)
         .expect(500)
         .expect({
           statusCode: 500,
@@ -519,13 +393,39 @@ describe('Movies', () => {
 
   describe('/movies (GET)', () => {
     it('should return all movies with status 200', async () => {
-      const result = [lightMockData, lightMockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as Movie[]);
+      const result = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(MovieLightResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/movies')
         .expect(200)
-        .expect(result);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {
@@ -544,13 +444,39 @@ describe('Movies', () => {
 
   describe('/movies/profil/:profilId (GET)', () => {
     it('should return all movies with profilId with status 200', async () => {
-      const result = [lightMockData, lightMockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as Movie[]);
+      const result = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(MovieLightResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/movies/profil/1')
         .expect(200)
-        .expect(result);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {
@@ -580,19 +506,18 @@ describe('Movies', () => {
 
   describe('/movies/:id (GET)', () => {
     it('should return the movie with the given id with status 200', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue({
-        ...lightMockData,
-        ...detailsMockData,
-        release_date: new Date('2014-01-01'),
-      } as Movie);
+      const mockData = MockFactory.createMockMovie();
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(MovieResponseDto, {
+        ...mockData,
+        release_date: '2014-01-01T00:00:00.000Z',
+      });
 
       return request(app.getHttpServer() as App)
         .get('/movies/1')
         .expect(200)
-        .expect({
-          ...lightMockData,
-          ...detailsMockData,
-        });
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {

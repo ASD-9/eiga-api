@@ -13,18 +13,9 @@ import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
 import { join } from 'path';
 import * as fs from 'fs';
-
-const mockData = {
-  id: 1,
-  name: 'avatar1',
-  image_name: 'avatar1.jpg',
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'avatar2',
-  image_name: 'avatar2.jpg',
-};
+import { MockFactory } from './mock-factory';
+import { AvatarResponseDto } from '../src/avatars/dto/avatar-response.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 describe('Avatars', () => {
   let app: INestApplication;
@@ -81,16 +72,19 @@ describe('Avatars', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Avatar);
-
       const createAvatarDto = { name: 'avatar1' };
+      const mockData = MockFactory.createMockAvatar();
+
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(AvatarResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/avatars')
         .attach('image', testFilePath)
         .field(createAvatarDto)
         .expect(201)
-        .expect(mockData)
+        .expect(instanceToPlain(responseData))
         .then(() => {
           fs.unlinkSync(testFilePath);
         });
@@ -178,13 +172,18 @@ describe('Avatars', () => {
 
   describe('/avatars (GET)', () => {
     it('should return all avatars with status 200', () => {
-      const result = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as Avatar[]);
+      const result = [
+        MockFactory.createMockAvatar(),
+        MockFactory.createMockAvatar({ id: 2 }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(AvatarResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/avatars')
         .expect(200)
-        .expect(result);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should throw InternalServerErrorException with status 500', async () => {

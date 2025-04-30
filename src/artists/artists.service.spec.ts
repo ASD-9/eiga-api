@@ -11,51 +11,12 @@ import {
 } from '@nestjs/common';
 import { join } from 'path';
 import * as fs from 'fs';
-import { JobResponseDto } from 'src/jobs/dto/job-response.dto';
-import { NationalityResponseDto } from 'src/nationalities/dto/nationality-response.dto';
+import { JobResponseDto } from '../jobs/dto/job-response.dto';
+import { NationalityResponseDto } from '../nationalities/dto/nationality-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { ArtistLightResponseDto } from './dto/artist-light-response.dto';
 import { ArtistResponseDto } from './dto/artist-response';
-
-const mockData = {
-  id: 1,
-  name: 'Artist 1',
-  image_name: 'artist1.jpg',
-  bio: 'Artist 1 bio',
-  birthday: new Date('1990-01-01'),
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
-
-const mockData2 = {
-  id: 2,
-  name: 'Artist 2',
-  image_name: 'artist2.jpg',
-  bio: 'Artist 2 bio',
-  birthday: new Date('1990-01-01'),
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('ArtistsService', () => {
   let service: ArtistsService;
@@ -102,23 +63,20 @@ describe('ArtistsService', () => {
 
   describe('create', () => {
     it('should create a new artist and return it', async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createArtistDto = MockFactory.createMockCreateArtistDto();
       const imageName = 'artist1.jpg';
+      const mockData = MockFactory.createMockArtist();
 
       jest
         .spyOn(jobsService, 'findOneById')
-        .mockResolvedValue(mockData.jobs[0] as JobResponseDto);
+        .mockResolvedValue(plainToInstance(JobResponseDto, mockData.jobs[0]));
       jest
         .spyOn(nationalitiesService, 'findOneById')
-        .mockResolvedValue(mockData.nationalities[0] as NationalityResponseDto);
+        .mockResolvedValue(
+          plainToInstance(NationalityResponseDto, mockData.nationalities[0]),
+        );
 
-      jest.spyOn(repository, 'save').mockResolvedValue(mockData as Artist);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       expect(await service.create(createArtistDto, imageName)).toEqual(
         plainToInstance(ArtistLightResponseDto, mockData),
@@ -126,37 +84,30 @@ describe('ArtistsService', () => {
     });
 
     it('should throw NotFoundException if a job is not found', async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
+      const createArtistDto = MockFactory.createMockCreateArtistDto({
         jobs_ids: [99],
-        nationalities_ids: [1],
-      };
+      });
       const imageName = 'artist1.jpg';
 
       jest
         .spyOn(jobsService, 'findOneById')
-        .mockRejectedValue(new NotFoundException('Job 99 introuvable'));
+        .mockRejectedValue(new NotFoundException('Métier 99 introuvable'));
 
       await expect(service.create(createArtistDto, imageName)).rejects.toThrow(
-        new NotFoundException('Job 99 introuvable'),
+        new NotFoundException('Métier 99 introuvable'),
       );
     });
 
     it('should throw NotFoundException if a nationality is not found', async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
+      const createArtistDto = MockFactory.createMockCreateArtistDto({
         nationalities_ids: [99],
-      };
+      });
       const imageName = 'artist1.jpg';
+      const job = MockFactory.createMockJob();
 
       jest
         .spyOn(jobsService, 'findOneById')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(plainToInstance(JobResponseDto, job));
       jest
         .spyOn(nationalitiesService, 'findOneById')
         .mockRejectedValue(new NotFoundException('Nationalité 99 introuvable'));
@@ -167,21 +118,18 @@ describe('ArtistsService', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: new Date('1990-01-01'),
-        jobs_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createArtistDto = MockFactory.createMockCreateArtistDto();
       const imageName = 'artist1.jpg';
+      const mockData = MockFactory.createMockArtist();
 
       jest
         .spyOn(jobsService, 'findOneById')
-        .mockResolvedValue(mockData.jobs[0]);
+        .mockResolvedValue(plainToInstance(JobResponseDto, mockData.jobs[0]));
       jest
         .spyOn(nationalitiesService, 'findOneById')
-        .mockResolvedValue(mockData.nationalities[0]);
+        .mockResolvedValue(
+          plainToInstance(NationalityResponseDto, mockData.nationalities[0]),
+        );
 
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
@@ -193,8 +141,22 @@ describe('ArtistsService', () => {
 
   describe('findAll', () => {
     it('should return an arrray of artists', async () => {
-      const mockResult = [mockData, mockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(mockResult as Artist[]);
+      const mockResult = [
+        MockFactory.createMockArtist({
+          bio: undefined,
+          birthday: undefined,
+          jobs: undefined,
+          nationalities: undefined,
+        }),
+        MockFactory.createMockArtist({
+          id: 2,
+          bio: undefined,
+          birthday: undefined,
+          jobs: undefined,
+          nationalities: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
 
       expect(await service.findAll()).toEqual(
         plainToInstance(ArtistLightResponseDto, mockResult),
@@ -212,7 +174,8 @@ describe('ArtistsService', () => {
 
   describe('findOneById', () => {
     it('should return the artist with the given id', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData as Artist);
+      const mockData = MockFactory.createMockArtist();
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
 
       expect(await service.findOneById(1)).toEqual(
         plainToInstance(ArtistResponseDto, mockData),

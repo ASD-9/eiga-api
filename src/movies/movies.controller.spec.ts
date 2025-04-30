@@ -10,60 +10,7 @@ import { InternalServerErrorException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 import { MovieResponseDto } from './dto/movie-response.dto';
-
-const mockData = {
-  id: 1,
-  title: 'Movie 1',
-  synopsis: 'Synopsis 1',
-  image_name: 'image1.jpg',
-  duration: 120,
-  trailer_url: 'https://example.com/trailer1',
-  release_date: new Date('2014-01-01'),
-  video_name: 'video1.mp4',
-  saga: {
-    id: 1,
-    name: 'Saga 1',
-  },
-  categories: [
-    {
-      id: 1,
-      name: 'Category 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
-
-const mockData2 = {
-  id: 2,
-  title: 'Movie 2',
-  synopsis: 'Synopsis 2',
-  image_name: 'image2.jpg',
-  duration: 120,
-  trailer_url: 'https://example.com/trailer2',
-  release_date: new Date('2014-01-01'),
-  video_name: 'video2.mp4',
-  saga: {
-    id: 1,
-    name: 'Saga 1',
-  },
-  categories: [
-    {
-      id: 1,
-      name: 'Category 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
+import { MockFactory } from '../../test/mock-factory';
 
 describe('MoviesController', () => {
   let controller: MoviesController;
@@ -99,41 +46,25 @@ describe('MoviesController', () => {
 
   describe('create', () => {
     it('should return the created movie', async () => {
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: new Date('2014-01-01'),
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieDto = MockFactory.createMockCreateMovieDto();
       const files = {
         image: [{ filename: 'image1.jpg' }],
         video: [{ filename: 'video1.mp4' }],
       };
-      jest
-        .spyOn(service, 'create')
-        .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockData));
+      const mockData = plainToInstance(
+        MovieLightResponseDto,
+        MockFactory.createMockMovie(),
+      );
+      jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       expect(await controller.create(createMovieDto, files as any)).toEqual(
-        plainToInstance(MovieLightResponseDto, mockData),
+        mockData,
       );
     });
 
     it('should throw InternalServerErrorException if at least one file is missing', () => {
-      const createMovieDto = {
-        title: 'Movie 1',
-        synopsis: 'Synopsis 1',
-        duration: 120,
-        trailer_url: 'https://example.com/trailer1',
-        release_date: new Date('2014-01-01'),
-        saga_id: 1,
-        categories_ids: [1],
-        nationalities_ids: [1],
-      };
+      const createMovieDto = MockFactory.createMockCreateMovieDto();
       const files = {
         image: [{ filename: 'image1.jpg' }],
       };
@@ -147,39 +78,37 @@ describe('MoviesController', () => {
 
   describe('findAll', () => {
     it('should return an array of movies', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(service, 'findAll')
-        .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockResult));
+      const mockResult = plainToInstance(MovieLightResponseDto, [
+        MockFactory.createMockMovie(),
+        MockFactory.createMockMovie({ id: 2 }),
+      ]);
+      jest.spyOn(service, 'findAll').mockResolvedValue(mockResult);
 
-      expect(await controller.findAll()).toEqual(
-        plainToInstance(MovieLightResponseDto, mockResult),
-      );
+      expect(await controller.findAll()).toEqual(mockResult);
     });
   });
 
   describe('findAllByProfil', () => {
     it('should return an array of movies', async () => {
-      const mockResult = [mockData, mockData2];
-      jest
-        .spyOn(service, 'findAllByProfil')
-        .mockResolvedValue(plainToInstance(MovieLightResponseDto, mockResult));
+      const mockResult = plainToInstance(MovieLightResponseDto, [
+        MockFactory.createMockMovie(),
+        MockFactory.createMockMovie({ id: 2 }),
+      ]);
+      jest.spyOn(service, 'findAllByProfil').mockResolvedValue(mockResult);
 
-      expect(await controller.findAllByProfil(1)).toEqual(
-        plainToInstance(MovieLightResponseDto, mockResult),
-      );
+      expect(await controller.findAllByProfil(1)).toEqual(mockResult);
     });
   });
 
   describe('findOneById', () => {
     it('should return a movie', async () => {
-      jest
-        .spyOn(service, 'findOneById')
-        .mockResolvedValue(plainToInstance(MovieResponseDto, mockData));
-
-      expect(await controller.findOneById(1)).toEqual(
-        plainToInstance(MovieResponseDto, mockData),
+      const mockData = plainToInstance(
+        MovieResponseDto,
+        MockFactory.createMockMovie(),
       );
+      jest.spyOn(service, 'findOneById').mockResolvedValue(mockData);
+
+      expect(await controller.findOneById(1)).toEqual(mockData);
     });
   });
 

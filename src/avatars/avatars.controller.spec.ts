@@ -6,18 +6,7 @@ import { Avatar } from './entities/avatar.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { AvatarResponseDto } from './dto/avatar-response.dto';
-
-const mockData = plainToInstance(AvatarResponseDto, {
-  id: 1,
-  name: 'avatar1',
-  image_name: 'avatar1.jpg',
-});
-
-const mockData2 = plainToInstance(AvatarResponseDto, {
-  id: 2,
-  name: 'avatar2',
-  image_name: 'avatar2.jpg',
-});
+import { MockFactory } from '../../test/mock-factory';
 
 describe('AvatarsController', () => {
   let controller: AvatarsController;
@@ -43,6 +32,10 @@ describe('AvatarsController', () => {
     it('should return status 201 with the created avatar', async () => {
       const createAvatarDto = { name: 'avatar1' };
       const file = { filename: 'avatar1.jpg' };
+      const mockData = plainToInstance(
+        AvatarResponseDto,
+        MockFactory.createMockAvatar(),
+      );
       jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -68,7 +61,10 @@ describe('AvatarsController', () => {
 
   describe('findAll', () => {
     it('should return an array of avatars', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(AvatarResponseDto, [
+        MockFactory.createMockAvatar(),
+        MockFactory.createMockAvatar({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
         .mockImplementation(() => Promise.resolve(mockResult));

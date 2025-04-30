@@ -4,7 +4,6 @@ import {
   BadRequestException,
   ClassSerializerInterceptor,
   INestApplication,
-  NotFoundException,
   ValidationPipe,
 } from '@nestjs/common';
 import { ArtistsModule } from '../src/artists/artists.module';
@@ -17,35 +16,10 @@ import { Job } from '../src/jobs/entities/job.entity';
 import { Nationality } from '../src/nationalities/entities/nationality.entity';
 import { join } from 'path';
 import * as fs from 'fs';
-
-const lightMockData = {
-  id: 1,
-  name: 'Artist 1',
-  image_name: 'artist1.jpg',
-};
-
-const detailsMockData = {
-  bio: 'Artist 1 bio',
-  birthday: '1990-01-01T00:00:00.000Z',
-  jobs: [
-    {
-      id: 1,
-      name: 'Job 1',
-    },
-  ],
-  nationalities: [
-    {
-      id: 1,
-      name: 'Nationality 1',
-    },
-  ],
-};
-
-const lightMockData2 = {
-  id: 2,
-  name: 'Artist 2',
-  image_name: 'artist2.jpg',
-};
+import { MockFactory } from './mock-factory';
+import { ArtistLightResponseDto } from '../src/artists/dto/artist-light-response.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { ArtistResponseDto } from '../src/artists/dto/artist-response';
 
 describe('Artists', () => {
   let app: INestApplication;
@@ -116,32 +90,25 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData();
+      const mockData = MockFactory.createMockArtist();
+
       jest
         .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.jobs[0] as Job);
+        .mockResolvedValue(mockData.jobs[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.nationalities[0] as Nationality);
-      jest.spyOn(repository, 'save').mockResolvedValue({
-        ...lightMockData,
-        ...detailsMockData,
-        birthday: new Date('1990-01-01'),
-      } as Artist);
+        .mockResolvedValue(mockData.nationalities[0]);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-        nationalities_ids: 1,
-      };
+      const responseData = plainToInstance(ArtistLightResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(201)
-        .expect(lightMockData)
+        .expect(instanceToPlain(responseData))
         .then(() => {
           fs.unlinkSync(testFilePath);
         });
@@ -151,18 +118,12 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.txt');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-        nationalities_ids: 1,
-      };
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData();
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(400)
         .expect({
           statusCode: 400,
@@ -176,17 +137,11 @@ describe('Artists', () => {
     });
 
     it('should throw InternalServerErrorException if no file is uploaded', async () => {
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-        nationalities_ids: 1,
-      };
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData();
 
       return request(app.getHttpServer() as App)
         .post('/artists')
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(500)
         .expect({
           statusCode: 500,
@@ -199,17 +154,14 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-      };
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData({
+        nationalities_ids: [],
+      });
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(400)
         .expect({
           message: 'Erreur de validation',
@@ -228,26 +180,20 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(jobsRepository, 'findOneBy')
-        .mockRejectedValue(new NotFoundException('Job 99 introuvable'));
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData({
+        jobs_ids: [99],
+      });
 
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 99,
-        nationalities_ids: 1,
-      };
+      jest.spyOn(jobsRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(404)
         .expect({
           statusCode: 404,
-          message: 'Job 99 introuvable',
+          message: 'Métier 99 introuvable',
           error: 'Not Found',
         })
         .then(() => {
@@ -259,25 +205,18 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
-      jest
-        .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.jobs[0]);
-      jest
-        .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockRejectedValue(new NotFoundException('Nationalité 99 introuvable'));
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData({
+        nationalities_ids: [99],
+      });
+      const job = MockFactory.createMockJob();
 
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-        nationalities_ids: 99,
-      };
+      jest.spyOn(jobsRepository, 'findOneBy').mockResolvedValue(job);
+      jest.spyOn(nationalitiesRepository, 'findOneBy').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(404)
         .expect({
           statusCode: 404,
@@ -293,26 +232,21 @@ describe('Artists', () => {
       const testFilePath = join(process.cwd(), 'tmp', 'test.jpg');
       fs.writeFileSync(testFilePath, Buffer.alloc(1024));
 
+      const createArtistFormData = MockFactory.createMockCreateArtistFormData();
+      const mockData = MockFactory.createMockArtist();
+
       jest
         .spyOn(jobsRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.jobs[0]);
+        .mockResolvedValue(mockData.jobs[0]);
       jest
         .spyOn(nationalitiesRepository, 'findOneBy')
-        .mockResolvedValue(detailsMockData.nationalities[0]);
+        .mockResolvedValue(mockData.nationalities[0]);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
-
-      const createArtistDto = {
-        name: 'Artist 1',
-        bio: 'Artist 1 bio',
-        birthday: '1990-01-01',
-        jobs_ids: 1,
-        nationalities_ids: 1,
-      };
 
       return request(app.getHttpServer() as App)
         .post('/artists')
         .attach('image', testFilePath)
-        .field(createArtistDto)
+        .field(createArtistFormData)
         .expect(500)
         .expect({
           statusCode: 500,
@@ -327,13 +261,29 @@ describe('Artists', () => {
 
   describe('/artists (GET)', () => {
     it('should return all artists with status 200', async () => {
-      const result = [lightMockData, lightMockData2];
-      jest.spyOn(repository, 'find').mockResolvedValue(result as Artist[]);
+      const result = [
+        MockFactory.createMockArtist({
+          bio: undefined,
+          birthday: undefined,
+          jobs: undefined,
+          nationalities: undefined,
+        }),
+        MockFactory.createMockArtist({
+          id: 2,
+          bio: undefined,
+          birthday: undefined,
+          jobs: undefined,
+          nationalities: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(ArtistLightResponseDto, result);
 
       return request(app.getHttpServer() as App)
         .get('/artists')
         .expect(200)
-        .expect(result);
+        .expect(instanceToPlain(responseData));
     });
 
     it('should thow InternalServerErrorException if there is an error', async () => {
@@ -352,19 +302,21 @@ describe('Artists', () => {
 
   describe('/artists/:id (GET)', () => {
     it('should return the artist with given id with status 200', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue({
-        ...lightMockData,
-        ...detailsMockData,
-        birthday: new Date('1990-01-01'),
-      } as Artist);
+      const mockData = MockFactory.createMockArtist();
+
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+
+      const responseData = plainToInstance(ArtistResponseDto, mockData);
 
       return request(app.getHttpServer() as App)
         .get('/artists/1')
         .expect(200)
-        .expect({
-          ...lightMockData,
-          ...detailsMockData,
-        });
+        .expect(
+          instanceToPlain({
+            ...responseData,
+            birthday: '1990-01-01T00:00:00.000Z',
+          }),
+        );
     });
 
     it('should throw BadRequestException if the id is not valid', async () => {

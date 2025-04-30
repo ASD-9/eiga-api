@@ -5,16 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Nationality } from './entities/nationality.entity';
 import { plainToInstance } from 'class-transformer';
 import { NationalityResponseDto } from './dto/nationality-response.dto';
-
-const mockData = plainToInstance(NationalityResponseDto, {
-  id: 1,
-  name: 'Nationality 1',
-});
-
-const mockData2 = plainToInstance(NationalityResponseDto, {
-  id: 2,
-  name: 'Nationality 2',
-});
+import { MockFactory } from '../../test/mock-factory';
 
 describe('NationalitiesController', () => {
   let controller: NationalitiesController;
@@ -39,6 +30,10 @@ describe('NationalitiesController', () => {
   describe('create', () => {
     it('should return the created nationality', async () => {
       const createNationalityDto = { name: 'Nationality 1' };
+      const mockData = plainToInstance(
+        NationalityResponseDto,
+        MockFactory.createMockNationality(),
+      );
       jest.spyOn(service, 'create').mockResolvedValue(mockData);
 
       expect(await controller.create(createNationalityDto)).toEqual(mockData);
@@ -47,7 +42,10 @@ describe('NationalitiesController', () => {
 
   describe('findAll', () => {
     it('should return an array of nationalities', async () => {
-      const mockResult = [mockData, mockData2];
+      const mockResult = plainToInstance(NationalityResponseDto, [
+        MockFactory.createMockNationality(),
+        MockFactory.createMockNationality({ id: 2 }),
+      ]);
       jest
         .spyOn(service, 'findAll')
         .mockImplementation(() => Promise.resolve(mockResult));
