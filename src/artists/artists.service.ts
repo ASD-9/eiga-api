@@ -79,12 +79,28 @@ export class ArtistsService {
     try {
       const artist: Artist | null = await this.artistRepository.findOne({
         where: { id },
-        relations: ['jobs', 'nationalities'],
+        relations: {
+          jobs: true,
+          nationalities: true,
+          movies: {
+            movie: true,
+            job: true,
+          },
+        },
       });
       if (!artist) {
         throw new NotFoundException(`Artiste ${id} introuvable`);
       }
-      return plainToInstance(ArtistResponseDto, artist);
+      const movies = artist.movies.map((entry) => ({
+        id: entry.movie.id,
+        title: entry.movie.title,
+        image_name: entry.movie.image_name,
+        job: entry.job,
+      }));
+      return plainToInstance(ArtistResponseDto, {
+        ...artist,
+        movies,
+      });
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

@@ -12,6 +12,8 @@ import { Saga } from 'src/sagas/entities/saga.entity';
 import { CreateArtistDto } from 'src/artists/dto/create-artist.dto';
 import { Movie } from 'src/movies/entities/movie.entity';
 import { CreateMovieDto } from 'src/movies/dto/create-movie.dto';
+import { MovieArtistJob } from 'src/movie-artist-job/entities/movie-artist-job.entity';
+import { MovieArtistJobDto } from 'src/movie-artist-job/dto/movie-artist-job.dto';
 
 export class MockFactory {
   static createMockRole(override: Partial<Role> = {}): Role {
@@ -100,6 +102,7 @@ export class MockFactory {
       birthday: new Date('1990-01-01'),
       jobs: [this.createMockJob()],
       nationalities: [this.createMockNationality()],
+      movies: [],
       ...override,
     };
   }
@@ -157,6 +160,7 @@ export class MockFactory {
       saga: this.createMockSaga(),
       categories: [this.createMockCategory()],
       nationalities: [this.createMockNationality()],
+      artists: [],
       profils: [],
       ...override,
     };
@@ -188,6 +192,29 @@ export class MockFactory {
       saga_id: 1,
       categories_ids: 1,
       nationalities_ids: 1,
+      ...override,
+    };
+  }
+
+  static createMockMovieArtistJob(
+    override: Partial<MovieArtistJob> = {},
+  ): MovieArtistJob {
+    return {
+      id: 1,
+      movie: this.createMockMovie(),
+      artist: this.createMockArtist(),
+      job: this.createMockJob(),
+      ...override,
+    };
+  }
+
+  static createMockActionMovieArtistJobDto(
+    override: Partial<MovieArtistJobDto> = {},
+  ): MovieArtistJobDto {
+    return {
+      movie_id: 1,
+      artist_id: 1,
+      job_id: 1,
       ...override,
     };
   }

@@ -1,6 +1,7 @@
 import { Expose } from 'class-transformer';
 import { JobResponseDto } from '../../jobs/dto/job-response.dto';
 import { NationalityResponseDto } from '../../nationalities/dto/nationality-response.dto';
+import { ArtistMovieDto } from './artist-movie.dto';
 
 export class ArtistResponseDto {
   @Expose()
@@ -23,4 +24,7 @@ export class ArtistResponseDto {
 
   @Expose()
   nationalities: NationalityResponseDto[];
+
+  @Expose()
+  movies: ArtistMovieDto[];
 }
