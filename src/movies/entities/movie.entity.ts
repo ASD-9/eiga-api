@@ -38,11 +38,11 @@ export class Movie {
   @Column()
   video_name: string;
 
-  @ManyToOne(() => Saga, { eager: true })
+  @ManyToOne(() => Saga)
   @JoinColumn({ name: 'saga_id' })
   saga: Saga;
 
-  @ManyToMany(() => Category, { eager: true })
+  @ManyToMany(() => Category)
   @JoinTable({
     name: 'Movie_category',
     joinColumn: { name: 'movie_id', referencedColumnName: 'id' },
@@ -50,7 +50,7 @@ export class Movie {
   })
   categories: Category[];
 
-  @ManyToMany(() => Nationality, { eager: true })
+  @ManyToMany(() => Nationality)
   @JoinTable({
     name: 'Movie_nationality',
     joinColumn: { name: 'movie_id', referencedColumnName: 'id' },

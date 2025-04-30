@@ -37,7 +37,6 @@ describe('Movies', () => {
       .useValue({
         save: jest.fn(),
         find: jest.fn(),
-        findOneBy: jest.fn(),
         update: jest.fn(),
         findOne: jest.fn(),
         delete: jest.fn(),
@@ -507,7 +506,7 @@ describe('Movies', () => {
   describe('/movies/:id (GET)', () => {
     it('should return the movie with the given id with status 200', async () => {
       const mockData = MockFactory.createMockMovie();
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockData);
 
       const responseData = plainToInstance(MovieResponseDto, {
         ...mockData,
@@ -532,7 +531,7 @@ describe('Movies', () => {
     });
 
     it('should throw NotFoundException if the movie is not found', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .get('/movies/99')
@@ -545,7 +544,7 @@ describe('Movies', () => {
     });
 
     it('should throw InternalServerErrorException if an error occurs', async () => {
-      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
 
       return request(app.getHttpServer() as App)
         .get('/movies/1')

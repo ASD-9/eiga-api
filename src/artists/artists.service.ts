@@ -77,8 +77,9 @@ export class ArtistsService {
 
   async findOneById(id: number): Promise<ArtistResponseDto> {
     try {
-      const artist: Artist | null = await this.artistRepository.findOneBy({
-        id,
+      const artist: Artist | null = await this.artistRepository.findOne({
+        where: { id },
+        relations: ['jobs', 'nationalities'],
       });
       if (!artist) {
         throw new NotFoundException(`Artiste ${id} introuvable`);

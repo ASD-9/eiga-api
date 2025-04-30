@@ -35,7 +35,6 @@ describe('Artists', () => {
       .useValue({
         save: jest.fn(),
         find: jest.fn(),
-        findOneBy: jest.fn(),
         update: jest.fn(),
         findOne: jest.fn(),
         delete: jest.fn(),
@@ -304,7 +303,7 @@ describe('Artists', () => {
     it('should return the artist with given id with status 200', async () => {
       const mockData = MockFactory.createMockArtist();
 
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockData);
 
       const responseData = plainToInstance(ArtistResponseDto, mockData);
 
@@ -331,7 +330,7 @@ describe('Artists', () => {
     });
 
     it('should throw NotFoundException if the artist is not found', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .get('/artists/99')
@@ -344,7 +343,7 @@ describe('Artists', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error());
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error());
 
       return request(app.getHttpServer() as App)
         .get('/artists/1')

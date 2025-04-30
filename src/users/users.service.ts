@@ -53,7 +53,9 @@ export class UsersService {
     try {
       return plainToInstance(
         UserResponseDto,
-        await this.usersRepository.find(),
+        await this.usersRepository.find({
+          relations: ['role'],
+        }),
       );
     } catch {
       throw new InternalServerErrorException(
@@ -64,7 +66,10 @@ export class UsersService {
 
   async findOneById(id: number): Promise<UserResponseDto> {
     try {
-      const user = await this.usersRepository.findOneBy({ id });
+      const user = await this.usersRepository.findOne({
+        where: { id },
+        relations: ['role'],
+      });
       if (!user) {
         throw new NotFoundException(`Utilisateur ${id} introuvable`);
       }

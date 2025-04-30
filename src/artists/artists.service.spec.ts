@@ -33,7 +33,6 @@ describe('ArtistsService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
-            findOneBy: jest.fn(),
             update: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
@@ -175,7 +174,7 @@ describe('ArtistsService', () => {
   describe('findOneById', () => {
     it('should return the artist with the given id', async () => {
       const mockData = MockFactory.createMockArtist();
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockData);
 
       expect(await service.findOneById(1)).toEqual(
         plainToInstance(ArtistResponseDto, mockData),
@@ -183,7 +182,7 @@ describe('ArtistsService', () => {
     });
 
     it('should throw NotFoundException if the artist is not found', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       await expect(service.findOneById(99)).rejects.toThrow(
         new NotFoundException(`Artiste 99 introuvable`),
@@ -191,7 +190,7 @@ describe('ArtistsService', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error());
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error());
 
       await expect(service.findOneById(1)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),

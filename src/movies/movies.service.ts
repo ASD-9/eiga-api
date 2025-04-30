@@ -106,8 +106,9 @@ export class MoviesService {
 
   async findOneById(id: number): Promise<MovieResponseDto> {
     try {
-      const movie: Movie | null = await this.moviesRepository.findOneBy({
-        id,
+      const movie: Movie | null = await this.moviesRepository.findOne({
+        where: { id },
+        relations: ['saga', 'categories', 'nationalities'],
       });
       if (!movie) {
         throw new NotFoundException(`Film ${id} introuvable`);

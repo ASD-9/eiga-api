@@ -32,7 +32,7 @@ describe('UsersService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
-            findOneBy: jest.fn(),
+            findOne: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
           },
@@ -121,7 +121,7 @@ describe('UsersService', () => {
     it('should return the user with the given id', async () => {
       const mockData = MockFactory.createMockUser();
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockData);
 
       expect(await service.findOneById(id)).toEqual(
         plainToInstance(UserResponseDto, mockData),
@@ -130,7 +130,7 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException if the user is not found', async () => {
       const id = 99;
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       await expect(service.findOneById(id)).rejects.toThrow(
         new NotFoundException(`Utilisateur ${id} introuvable`),
@@ -139,7 +139,7 @@ describe('UsersService', () => {
 
     it("should throw InternalServerErrorException if there's an error", async () => {
       const id = 1;
-      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
 
       await expect(service.findOneById(id)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),

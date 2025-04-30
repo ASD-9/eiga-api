@@ -39,7 +39,7 @@ describe('Profils', () => {
       .overrideProvider(getRepositoryToken(Avatar))
       .useValue({ findOneBy: jest.fn() })
       .overrideProvider(getRepositoryToken(User))
-      .useValue({ findOneBy: jest.fn() })
+      .useValue({ findOne: jest.fn() })
       .overrideProvider(getRepositoryToken(Role))
       .useValue({})
       .compile();
@@ -77,7 +77,7 @@ describe('Profils', () => {
       jest
         .spyOn(avatarsRepository, 'findOneBy')
         .mockResolvedValue(mockData.avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(mockData.user);
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(mockData.user);
       jest.spyOn(repository, 'save').mockResolvedValue(mockData);
 
       const responseData = plainToInstance(ProfilResponseDto, mockData);
@@ -130,7 +130,7 @@ describe('Profils', () => {
       const avatar = MockFactory.createMockAvatar();
 
       jest.spyOn(avatarsRepository, 'findOneBy').mockResolvedValue(avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(null);
 
       return request(app.getHttpServer() as App)
         .post('/profils')
@@ -150,7 +150,7 @@ describe('Profils', () => {
       jest
         .spyOn(avatarsRepository, 'findOneBy')
         .mockResolvedValue(mockData.avatar);
-      jest.spyOn(usersRepository, 'findOneBy').mockResolvedValue(mockData.user);
+      jest.spyOn(usersRepository, 'findOne').mockResolvedValue(mockData.user);
       jest.spyOn(repository, 'save').mockRejectedValue(new Error());
 
       return request(app.getHttpServer() as App)

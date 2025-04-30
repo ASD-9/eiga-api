@@ -56,6 +56,7 @@ export class ProfilsService {
         ProfilResponseDto,
         await this.profilsRepository.find({
           where: { user: { id: userId } },
+          relations: ['avatar'],
         }),
       );
     } catch {

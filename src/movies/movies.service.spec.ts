@@ -36,7 +36,6 @@ describe('MoviesService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
-            findOneBy: jest.fn(),
             update: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
@@ -279,7 +278,7 @@ describe('MoviesService', () => {
   describe('findOneById', () => {
     it('should return a movie', async () => {
       const mockData = MockFactory.createMockMovie();
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockData);
 
       expect(await service.findOneById(1)).toEqual(
         plainToInstance(MovieResponseDto, mockData),
@@ -287,7 +286,7 @@ describe('MoviesService', () => {
     });
 
     it('should throw NotFoundException if the movie is not found', async () => {
-      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
 
       await expect(service.findOneById(99)).rejects.toThrow(
         new NotFoundException(`Film 99 introuvable`),
@@ -295,7 +294,7 @@ describe('MoviesService', () => {
     });
 
     it("should throw InternalServerErrorException if there's an error", async () => {
-      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
 
       await expect(service.findOneById(1)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),

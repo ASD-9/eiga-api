@@ -25,7 +25,7 @@ export class Artist {
   @Column()
   birthday: Date;
 
-  @ManyToMany(() => Job, { eager: true })
+  @ManyToMany(() => Job)
   @JoinTable({
     name: 'Artist_job',
     joinColumn: { name: 'artist_id', referencedColumnName: 'id' },
@@ -33,7 +33,7 @@ export class Artist {
   })
   jobs: Job[];
 
-  @ManyToMany(() => Nationality, { eager: true })
+  @ManyToMany(() => Nationality)
   @JoinTable({
     name: 'Artist_nationality',
     joinColumn: { name: 'artist_id', referencedColumnName: 'id' },

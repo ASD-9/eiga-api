@@ -20,7 +20,7 @@ export class Profil {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Avatar, { eager: true })
+  @ManyToOne(() => Avatar)
   @JoinColumn({ name: 'avatar_id' })
   avatar: Avatar;
 }
