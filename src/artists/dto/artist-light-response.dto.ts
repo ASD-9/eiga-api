@@ -29,4 +29,7 @@ export class ArtistLightResponseDto {
 
   @Exclude()
   nationalities_ids: number[];
+
+  @Exclude()
+  movies: any[];
 }

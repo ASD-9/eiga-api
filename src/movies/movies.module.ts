@@ -16,5 +16,6 @@ import { SagasModule } from '../sagas/sagas.module';
   ],
   controllers: [MoviesController],
   providers: [MoviesService],
+  exports: [MoviesService],
 })
 export class MoviesModule {}

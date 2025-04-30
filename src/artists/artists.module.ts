@@ -14,5 +14,6 @@ import { NationalitiesModule } from '../nationalities/nationalities.module';
   ],
   controllers: [ArtistsController],
   providers: [ArtistsService],
+  exports: [ArtistsService],
 })
 export class ArtistsModule {}

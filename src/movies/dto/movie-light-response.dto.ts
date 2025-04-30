@@ -35,6 +35,9 @@ export class MovieLightResponseDto {
   nationalities: any[];
 
   @Exclude()
+  artists: any[];
+
+  @Exclude()
   profils: any[];
 
   @Exclude()

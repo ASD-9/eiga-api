@@ -5,12 +5,14 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Saga } from '../../sagas/entities/saga.entity';
 import { Category } from '../../categories/entities/category.entity';
 import { Nationality } from '../../nationalities/entities/nationality.entity';
 import { Profil } from '../../profils/entities/profil.entity';
+import { MovieArtistJob } from '../../movie-artist-job/entities/movie-artist-job.entity';
 
 @Entity('Movies')
 export class Movie {
@@ -57,6 +59,9 @@ export class Movie {
     inverseJoinColumn: { name: 'nationality_id', referencedColumnName: 'id' },
   })
   nationalities: Nationality[];
+
+  @OneToMany(() => MovieArtistJob, (movieArtistJob) => movieArtistJob.movie)
+  artists: MovieArtistJob[];
 
   @ManyToMany(() => Profil)
   @JoinTable({

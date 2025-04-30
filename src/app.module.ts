@@ -13,6 +13,7 @@ import { NationalitiesModule } from './nationalities/nationalities.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ArtistsModule } from './artists/artists.module';
 import { MoviesModule } from './movies/movies.module';
+import { MovieArtistJobModule } from './movie-artist-job/movie-artist-job.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { MoviesModule } from './movies/movies.module';
     JobsModule,
     ArtistsModule,
     MoviesModule,
+    MovieArtistJobModule,
   ],
   controllers: [],
   providers: [],

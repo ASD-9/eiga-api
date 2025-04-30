@@ -1,3 +1,4 @@
+import { MovieArtistJob } from '../../movie-artist-job/entities/movie-artist-job.entity';
 import { Job } from '../../jobs/entities/job.entity';
 import { Nationality } from '../../nationalities/entities/nationality.entity';
 import {
@@ -5,6 +6,7 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -40,4 +42,7 @@ export class Artist {
     inverseJoinColumn: { name: 'nationality_id', referencedColumnName: 'id' },
   })
   nationalities: Nationality[];
+
+  @OneToMany(() => MovieArtistJob, (movieArtistJob) => movieArtistJob.artist)
+  movies: MovieArtistJob[];
 }
