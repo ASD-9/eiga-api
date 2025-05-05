@@ -104,6 +104,24 @@ export class MoviesService {
     }
   }
 
+  async findRandom(number: number): Promise<MovieLightResponseDto[]> {
+    try {
+      return plainToInstance(
+        MovieLightResponseDto,
+        await this.moviesRepository
+          .createQueryBuilder('movie')
+          .select(['movie.id', 'movie.title', 'movie.image_name'])
+          .orderBy('RAND()')
+          .limit(number)
+          .getMany(),
+      );
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async findOneById(id: number): Promise<MovieResponseDto> {
     try {
       const movie: Movie | null = await this.moviesRepository.findOne({

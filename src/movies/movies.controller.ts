@@ -11,6 +11,8 @@ import {
   UseInterceptors,
   UploadedFiles,
   InternalServerErrorException,
+  ParseIntPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -74,6 +76,20 @@ export class MoviesController {
     @Param('profilId', ParseIdPipe) profilId: number,
   ): Promise<MovieLightResponseDto[]> {
     return this.moviesService.findAllByProfil(profilId);
+  }
+
+  @Get('/random/:number')
+  findRandom(
+    @Param(
+      'number',
+      new ParseIntPipe({
+        exceptionFactory: () =>
+          new BadRequestException('Le nombre doit être un entier positif'),
+      }),
+    )
+    number: number,
+  ): Promise<MovieLightResponseDto[]> {
+    return this.moviesService.findRandom(number);
   }
 
   @Get(':id')

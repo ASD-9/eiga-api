@@ -9,7 +9,12 @@ import {
 import { MoviesModule } from '../src/movies/movies.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Movie } from '../src/movies/entities/movie.entity';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  Repository,
+  SelectQueryBuilder,
+  UpdateResult,
+} from 'typeorm';
 import { App } from 'supertest/types';
 import { ValidationError } from 'class-validator';
 import { Saga } from '../src/sagas/entities/saga.entity';
@@ -37,6 +42,7 @@ describe('Movies', () => {
       .useValue({
         save: jest.fn(),
         find: jest.fn(),
+        createQueryBuilder: jest.fn(),
         update: jest.fn(),
         findOne: jest.fn(),
         delete: jest.fn(),
@@ -494,6 +500,78 @@ describe('Movies', () => {
 
       return request(app.getHttpServer() as App)
         .get('/movies/profil/1')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
+  describe('/movies/random/:number (GET)', () => {
+    it('should return n random movies with status 200', async () => {
+      const result = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(result),
+      } as unknown as SelectQueryBuilder<Movie>);
+
+      const responseData = plainToInstance(MovieLightResponseDto, result);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/random/2')
+        .expect(200)
+        .expect(instanceToPlain(responseData));
+    });
+
+    it('should throw BadRequestException if the number is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .get('/movies/random/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: 'Le nombre doit être un entier positif',
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockRejectedValue(new Error('Error')),
+      } as unknown as SelectQueryBuilder<Movie>);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/random/2')
         .expect(500)
         .expect({
           statusCode: 500,

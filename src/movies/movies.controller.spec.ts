@@ -100,6 +100,18 @@ describe('MoviesController', () => {
     });
   });
 
+  describe('findRandom', () => {
+    it('should return an array of movies', async () => {
+      const mockResult = plainToInstance(MovieLightResponseDto, [
+        MockFactory.createMockMovie(),
+        MockFactory.createMockMovie({ id: 2 }),
+      ]);
+      jest.spyOn(service, 'findRandom').mockResolvedValue(mockResult);
+
+      expect(await controller.findRandom(2)).toEqual(mockResult);
+    });
+  });
+
   describe('findOneById', () => {
     it('should return a movie', async () => {
       const mockData = plainToInstance(

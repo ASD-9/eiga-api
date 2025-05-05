@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MoviesService } from './movies.service';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import {
+  DeleteResult,
+  Repository,
+  SelectQueryBuilder,
+  UpdateResult,
+} from 'typeorm';
 import { Movie } from './entities/movie.entity';
 import { SagasService } from '../sagas/sagas.service';
 import { CategoriesService } from '../categories/categories.service';
@@ -36,6 +41,7 @@ describe('MoviesService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
+            createQueryBuilder: jest.fn(),
             update: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
@@ -270,6 +276,59 @@ describe('MoviesService', () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
       await expect(service.findAllByProfil(1)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findRandom', () => {
+    it('should return an array of a n random movies', async () => {
+      const mockResult = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(mockResult),
+      } as unknown as SelectQueryBuilder<Movie>);
+
+      expect(await service.findRandom(2)).toEqual(
+        plainToInstance(MovieLightResponseDto, mockResult),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        select: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockRejectedValue(new Error('Error')),
+      } as unknown as SelectQueryBuilder<Movie>);
+
+      await expect(service.findRandom(2)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });
