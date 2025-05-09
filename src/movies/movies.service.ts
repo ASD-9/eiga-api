@@ -104,6 +104,22 @@ export class MoviesService {
     }
   }
 
+  async findAllBySaga(sagaId: number): Promise<MovieLightResponseDto[]> {
+    try {
+      return plainToInstance(
+        MovieLightResponseDto,
+        await this.moviesRepository.find({
+          where: { saga: { id: sagaId } },
+          select: ['id', 'title', 'image_name'],
+        }),
+      );
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async findRandom(number: number): Promise<MovieLightResponseDto[]> {
     try {
       return plainToInstance(

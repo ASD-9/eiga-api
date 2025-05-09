@@ -281,6 +281,49 @@ describe('MoviesService', () => {
     });
   });
 
+  describe('findAllBySaga', () => {
+    it('should return an array of movies', async () => {
+      const mockResult = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(mockResult);
+
+      expect(await service.findAllBySaga(1)).toEqual(
+        plainToInstance(MovieLightResponseDto, mockResult),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
+
+      await expect(service.findAllByProfil(1)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
   describe('findRandom', () => {
     it('should return an array of a n random movies', async () => {
       const mockResult = [

@@ -509,6 +509,68 @@ describe('Movies', () => {
     });
   });
 
+  describe('/movies/saga/:sagaId (GET)', () => {
+    it('should return all movies with sagaId with status 200', async () => {
+      const result = [
+        MockFactory.createMockMovie({
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+        MockFactory.createMockMovie({
+          id: 2,
+          synopsis: undefined,
+          duration: undefined,
+          trailer_url: undefined,
+          release_date: undefined,
+          video_name: undefined,
+          saga: undefined,
+          categories: undefined,
+          nationalities: undefined,
+          profils: undefined,
+        }),
+      ];
+      jest.spyOn(repository, 'find').mockResolvedValue(result);
+
+      const responseData = plainToInstance(MovieLightResponseDto, result);
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/saga/1')
+        .expect(200)
+        .expect(instanceToPlain(responseData));
+    });
+
+    it('should throw BadRequestException if the id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .get('/movies/saga/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
+
+      return request(app.getHttpServer() as App)
+        .get('/movies/saga/1')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
   describe('/movies/random/:number (GET)', () => {
     it('should return n random movies with status 200', async () => {
       const result = [

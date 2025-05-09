@@ -78,6 +78,13 @@ export class MoviesController {
     return this.moviesService.findAllByProfil(profilId);
   }
 
+  @Get('saga/:sagaId')
+  findAllBySaga(
+    @Param('sagaId', ParseIdPipe) sagaId: number,
+  ): Promise<MovieLightResponseDto[]> {
+    return this.moviesService.findAllBySaga(sagaId);
+  }
+
   @Get('/random/:number')
   findRandom(
     @Param(
