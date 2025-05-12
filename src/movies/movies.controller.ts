@@ -85,7 +85,7 @@ export class MoviesController {
     return this.moviesService.findAllBySaga(sagaId);
   }
 
-  @Get('/random/:number')
+  @Get('random/:number')
   findRandom(
     @Param(
       'number',
@@ -117,5 +117,23 @@ export class MoviesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIdPipe) id: number): Promise<void> {
     return this.moviesService.remove(id);
+  }
+
+  @Post(':id/add-to-profil/:profilId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  addToProfil(
+    @Param('id', ParseIdPipe) id: number,
+    @Param('profilId', ParseIdPipe) profilId: number,
+  ): Promise<void> {
+    return this.moviesService.addToProfil(id, profilId);
+  }
+
+  @Delete(':id/remove-from-profil/:profilId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeFromProfil(
+    @Param('id', ParseIdPipe) id: number,
+    @Param('profilId', ParseIdPipe) profilId: number,
+  ): Promise<void> {
+    return this.moviesService.removeFromProfil(id, profilId);
   }
 }

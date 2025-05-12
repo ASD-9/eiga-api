@@ -18,6 +18,7 @@ import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { MovieResponseDto } from './dto/movie-response.dto';
 import { SagaResponseDto } from '../sagas/dto/saga-response.dto';
+import { ProfilsService } from '../profils/profils.service';
 
 @Injectable()
 export class MoviesService {
@@ -27,6 +28,7 @@ export class MoviesService {
     private sagasService: SagasService,
     private categoriesService: CategoriesService,
     private nationalitiesService: NationalitiesService,
+    private profilsService: ProfilsService,
   ) {}
 
   async create(
@@ -236,6 +238,46 @@ export class MoviesService {
           console.log(error);
         }
       }
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async addToProfil(movieId: number, profilId: number): Promise<void> {
+    try {
+      const profil = await this.profilsService.findOneById(profilId);
+      const movie = await this.moviesRepository.findOne({
+        where: { id: movieId },
+        relations: ['profils'],
+      });
+      if (!movie) {
+        throw new NotFoundException(`Film ${movieId} introuvable`);
+      }
+      movie.profils.push(profil);
+      await this.moviesRepository.save(movie);
+    } catch (error) {
+      console.log(error);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
+  async removeFromProfil(movieId: number, profilId: number): Promise<void> {
+    try {
+      const movie = await this.moviesRepository.findOne({
+        where: { id: movieId },
+        relations: ['profils'],
+      });
+      if (!movie) {
+        throw new NotFoundException(`Film ${movieId} introuvable`);
+      }
+      movie.profils = movie.profils.filter((profil) => profil.id !== profilId);
+      await this.moviesRepository.save(movie);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(

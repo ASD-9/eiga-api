@@ -6,6 +6,7 @@ import { Movie } from './entities/movie.entity';
 import { NationalitiesModule } from '../nationalities/nationalities.module';
 import { CategoriesModule } from '../categories/categories.module';
 import { SagasModule } from '../sagas/sagas.module';
+import { ProfilsModule } from '../profils/profils.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { SagasModule } from '../sagas/sagas.module';
     SagasModule,
     CategoriesModule,
     NationalitiesModule,
+    ProfilsModule,
   ],
   controllers: [MoviesController],
   providers: [MoviesService],

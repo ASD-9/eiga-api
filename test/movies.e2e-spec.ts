@@ -26,6 +26,10 @@ import { MockFactory } from './mock-factory';
 import { MovieLightResponseDto } from '../src/movies/dto/movie-light-response.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { MovieResponseDto } from '../src/movies/dto/movie-response.dto';
+import { Profil } from '../src/profils/entities/profil.entity';
+import { Avatar } from '../src/avatars/entities/avatar.entity';
+import { User } from '../src/users/entities/user.entity';
+import { Role } from '../src/roles/entities/role.entity';
 
 describe('Movies', () => {
   let app: INestApplication;
@@ -33,6 +37,7 @@ describe('Movies', () => {
   let sagasRepository: Repository<Saga>;
   let categoriesRepository: Repository<Category>;
   let nationalitiesRepository: Repository<Nationality>;
+  let profilsRepository: Repository<Profil>;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -53,6 +58,14 @@ describe('Movies', () => {
       .useValue({ findOneBy: jest.fn() })
       .overrideProvider(getRepositoryToken(Nationality))
       .useValue({ findOneBy: jest.fn() })
+      .overrideProvider(getRepositoryToken(Profil))
+      .useValue({ findOneBy: jest.fn() })
+      .overrideProvider(getRepositoryToken(Avatar))
+      .useValue({})
+      .overrideProvider(getRepositoryToken(User))
+      .useValue({})
+      .overrideProvider(getRepositoryToken(Role))
+      .useValue({})
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -80,6 +93,9 @@ describe('Movies', () => {
     );
     nationalitiesRepository = moduleRef.get<Repository<Nationality>>(
       getRepositoryToken(Nationality),
+    );
+    profilsRepository = moduleRef.get<Repository<Profil>>(
+      getRepositoryToken(Profil),
     );
   });
 
@@ -849,6 +865,154 @@ describe('Movies', () => {
 
       return request(app.getHttpServer() as App)
         .delete('/movies/1')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
+  describe('/movies/:id/add-to-profil/:profilId (POST)', () => {
+    it('should add the movie with the given id to the profil with the given id and return status 204', async () => {
+      const mockMovie = MockFactory.createMockMovie();
+      const mockProfil = MockFactory.createMockProfil();
+
+      jest.spyOn(profilsRepository, 'findOneBy').mockResolvedValue(mockProfil);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockMovie);
+      jest.spyOn(repository, 'save').mockResolvedValue(mockMovie);
+
+      return request(app.getHttpServer() as App)
+        .post('/movies/1/add-to-profil/1')
+        .expect(204);
+    });
+
+    it('should throw BadRequestException if the movie id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .post('/movies/abc/add-to-profil/1')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw BadRequestException if the profil id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .post('/movies/1/add-to-profil/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw NotFoundException if the profil is not found', async () => {
+      jest.spyOn(profilsRepository, 'findOneBy').mockResolvedValue(null);
+
+      return request(app.getHttpServer() as App)
+        .post('/movies/1/add-to-profil/99')
+        .expect(404)
+        .expect({
+          statusCode: 404,
+          message: 'Profil 99 introuvable',
+          error: 'Not Found',
+        });
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      const mockProfil = MockFactory.createMockProfil();
+
+      jest.spyOn(profilsRepository, 'findOneBy').mockResolvedValue(mockProfil);
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+
+      return request(app.getHttpServer() as App)
+        .post('/movies/99/add-to-profil/1')
+        .expect(404)
+        .expect({
+          statusCode: 404,
+          message: 'Film 99 introuvable',
+          error: 'Not Found',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      const mockProfil = MockFactory.createMockProfil();
+
+      jest.spyOn(profilsRepository, 'findOneBy').mockResolvedValue(mockProfil);
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
+
+      return request(app.getHttpServer() as App)
+        .post('/movies/1/add-to-profil/1')
+        .expect(500)
+        .expect({
+          statusCode: 500,
+          message: 'Erreur serveur, veuillez réessayer',
+          error: 'Internal Server Error',
+        });
+    });
+  });
+
+  describe('/movies/:id/remove-from-profil/:profilId (DELETE)', () => {
+    it('should remove the movie with the given id from the profil with the given id and return status 204', async () => {
+      const mockProfil = MockFactory.createMockProfil();
+      const mockMovie = MockFactory.createMockMovie({
+        profils: [mockProfil],
+      });
+
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockMovie);
+      jest
+        .spyOn(repository, 'save')
+        .mockResolvedValue({ ...mockMovie, profils: [] });
+
+      return request(app.getHttpServer() as App)
+        .delete('/movies/1/remove-from-profil/1')
+        .expect(204);
+    });
+
+    it('should throw BadRequestException if the movie id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .delete('/movies/abc/remove-from-profil/1')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw BadRequestException if the profil id is not valid', async () => {
+      return request(app.getHttpServer() as App)
+        .delete('/movies/1/remove-from-profil/abc')
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: "L'id doit être un entier positif",
+          error: 'Bad Request',
+        });
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+
+      return request(app.getHttpServer() as App)
+        .delete('/movies/99/remove-from-profil/1')
+        .expect(404)
+        .expect({
+          statusCode: 404,
+          message: 'Film 99 introuvable',
+          error: 'Not Found',
+        });
+    });
+
+    it('should throw InternalServerErrorException if an error occurs', async () => {
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
+
+      return request(app.getHttpServer() as App)
+        .delete('/movies/1/remove-from-profil/1')
         .expect(500)
         .expect({
           statusCode: 500,

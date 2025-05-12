@@ -24,6 +24,8 @@ import { plainToInstance } from 'class-transformer';
 import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 import { MovieResponseDto } from './dto/movie-response.dto';
 import { MockFactory } from '../../test/mock-factory';
+import { ProfilsService } from '..//profils/profils.service';
+import { ProfilResponseDto } from '../profils/dto/profil-response.dto';
 
 describe('MoviesService', () => {
   let service: MoviesService;
@@ -31,6 +33,7 @@ describe('MoviesService', () => {
   let sagasService: SagasService;
   let categoriesService: CategoriesService;
   let nationalitiesService: NationalitiesService;
+  let profilsService: ProfilsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +68,12 @@ describe('MoviesService', () => {
             findOneById: jest.fn(),
           },
         },
+        {
+          provide: ProfilsService,
+          useValue: {
+            findOneById: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -74,6 +83,7 @@ describe('MoviesService', () => {
     categoriesService = module.get<CategoriesService>(CategoriesService);
     nationalitiesService =
       module.get<NationalitiesService>(NationalitiesService);
+    profilsService = module.get<ProfilsService>(ProfilsService);
   });
 
   describe('create', () => {
@@ -505,6 +515,105 @@ describe('MoviesService', () => {
       jest.spyOn(repository, 'delete').mockRejectedValue(new Error('Error'));
 
       await expect(service.remove(id)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('addToProfil', () => {
+    it('should add the movie with the given id to the profil with the given id', async () => {
+      const movieId = 1;
+      const profilId = 1;
+      const mockMovie = MockFactory.createMockMovie();
+      const mockProfil = MockFactory.createMockProfil();
+
+      jest
+        .spyOn(profilsService, 'findOneById')
+        .mockResolvedValue(plainToInstance(ProfilResponseDto, mockProfil));
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockMovie);
+
+      await service.addToProfil(movieId, profilId);
+
+      expect(mockMovie.profils).toContainEqual(
+        plainToInstance(ProfilResponseDto, mockProfil),
+      );
+    });
+
+    it('should throw NotFoundException if the profil is not found', async () => {
+      const movieId = 1;
+      const profilId = 99;
+      jest
+        .spyOn(profilsService, 'findOneById')
+        .mockRejectedValue(new NotFoundException('Profil 99 introuvable'));
+
+      await expect(service.addToProfil(movieId, profilId)).rejects.toThrow(
+        new NotFoundException('Profil 99 introuvable'),
+      );
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      const movieId = 99;
+      const profilId = 1;
+      const mockProfil = MockFactory.createMockProfil();
+      jest
+        .spyOn(profilsService, 'findOneById')
+        .mockResolvedValue(plainToInstance(ProfilResponseDto, mockProfil));
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+
+      await expect(service.addToProfil(movieId, profilId)).rejects.toThrow(
+        new NotFoundException(`Film 99 introuvable`),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      const movieId = 99;
+      const profilId = 1;
+      const mockProfil = MockFactory.createMockProfil();
+      jest
+        .spyOn(profilsService, 'findOneById')
+        .mockResolvedValue(plainToInstance(ProfilResponseDto, mockProfil));
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
+
+      await expect(service.addToProfil(profilId, movieId)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('removeFromProfil', () => {
+    it('should remove the movie with the given id from the profil with the given id', async () => {
+      const movieId = 1;
+      const profilId = 1;
+      const mockProfil = MockFactory.createMockProfil();
+      const mockMovie = MockFactory.createMockMovie({
+        profils: [plainToInstance(ProfilResponseDto, mockProfil)],
+      });
+
+      jest.spyOn(repository, 'findOne').mockResolvedValue(mockMovie);
+
+      await service.removeFromProfil(movieId, profilId);
+
+      expect(mockMovie.profils).not.toContainEqual(
+        plainToInstance(ProfilResponseDto, mockProfil),
+      );
+    });
+
+    it('should throw NotFoundException if the movie is not found', async () => {
+      const movieId = 99;
+      const profilId = 1;
+      jest.spyOn(repository, 'findOne').mockResolvedValue(null);
+
+      await expect(service.removeFromProfil(movieId, profilId)).rejects.toThrow(
+        new NotFoundException(`Film 99 introuvable`),
+      );
+    });
+
+    it('should throw InternalServerErrorException if there is an error', async () => {
+      const movieId = 1;
+      const profilId = 1;
+      jest.spyOn(repository, 'findOne').mockRejectedValue(new Error('Error'));
+
+      await expect(service.removeFromProfil(movieId, profilId)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });

@@ -11,6 +11,7 @@ import { plainToInstance } from 'class-transformer';
 import { MovieLightResponseDto } from './dto/movie-light-response.dto';
 import { MovieResponseDto } from './dto/movie-response.dto';
 import { MockFactory } from '../../test/mock-factory';
+import { ProfilsService } from '../profils/profils.service';
 
 describe('MoviesController', () => {
   let controller: MoviesController;
@@ -35,6 +36,10 @@ describe('MoviesController', () => {
         },
         {
           provide: NationalitiesService,
+          useValue: {},
+        },
+        {
+          provide: ProfilsService,
           useValue: {},
         },
       ],
@@ -152,6 +157,32 @@ describe('MoviesController', () => {
       jest.spyOn(service, 'remove').mockImplementation(() => Promise.resolve());
 
       expect(await controller.remove(id)).toBeUndefined();
+    });
+  });
+
+  describe('addToProfil', () => {
+    it('should return status 204 if the movie is successfully added to the profil', async () => {
+      const movieId = 1;
+      const profilId = 1;
+      jest
+        .spyOn(service, 'addToProfil')
+        .mockImplementation(() => Promise.resolve());
+
+      expect(await controller.addToProfil(movieId, profilId)).toBeUndefined();
+    });
+  });
+
+  describe('removeFromProfil', () => {
+    it('should return status 204 if the movie is successfully removed from the profil', async () => {
+      const movieId = 1;
+      const profilId = 1;
+      jest
+        .spyOn(service, 'removeFromProfil')
+        .mockImplementation(() => Promise.resolve());
+
+      expect(
+        await controller.removeFromProfil(movieId, profilId),
+      ).toBeUndefined();
     });
   });
 });
