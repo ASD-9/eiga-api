@@ -30,6 +30,7 @@ describe('ProfilsService', () => {
           useValue: {
             save: jest.fn(),
             find: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             delete: jest.fn(),
           },
@@ -141,6 +142,36 @@ describe('ProfilsService', () => {
       jest.spyOn(repository, 'find').mockRejectedValue(new Error('Error'));
 
       await expect(service.findAllByUser(userId)).rejects.toThrow(
+        new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
+      );
+    });
+  });
+
+  describe('findOneById', () => {
+    it('should return the profil with the given id', async () => {
+      const mockData = MockFactory.createMockProfil();
+      const id = 1;
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(mockData);
+
+      expect(await service.findOneById(id)).toEqual(
+        plainToInstance(ProfilResponseDto, mockData),
+      );
+    });
+
+    it('should thrown NotFoundException if the profil is not found', async () => {
+      const id = 99;
+      jest.spyOn(repository, 'findOneBy').mockResolvedValue(null);
+
+      await expect(service.findOneById(id)).rejects.toThrow(
+        new NotFoundException(`Profil ${id} introuvable`),
+      );
+    });
+
+    it("should throw InternalServerErrorException if there's an error", async () => {
+      const id = 1;
+      jest.spyOn(repository, 'findOneBy').mockRejectedValue(new Error('Error'));
+
+      await expect(service.findOneById(id)).rejects.toThrow(
         new InternalServerErrorException('Erreur serveur, veuillez réessayer'),
       );
     });

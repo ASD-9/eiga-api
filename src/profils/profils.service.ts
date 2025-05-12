@@ -66,6 +66,21 @@ export class ProfilsService {
     }
   }
 
+  async findOneById(id: number): Promise<ProfilResponseDto> {
+    try {
+      const profil = await this.profilsRepository.findOneBy({ id });
+      if (!profil) {
+        throw new NotFoundException(`Profil ${id} introuvable`);
+      }
+      return plainToInstance(ProfilResponseDto, profil);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async update(id: number, updateProfilDto: UpdateProfilDto): Promise<void> {
     try {
       const { avatar_id, ...rest } = updateProfilDto;
