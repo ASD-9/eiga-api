@@ -80,7 +80,7 @@ export class MoviesService {
       return plainToInstance(
         MovieLightResponseDto,
         await this.moviesRepository.find({
-          select: ['id', 'title', 'image_name'],
+          select: ['id', 'title', 'image_name', 'synopsis'],
         }),
       );
     } catch {
@@ -96,7 +96,7 @@ export class MoviesService {
         MovieLightResponseDto,
         await this.moviesRepository.find({
           where: { profils: { id: profilId } },
-          select: ['id', 'title', 'image_name'],
+          select: ['id', 'title', 'image_name', 'synopsis'],
         }),
       );
     } catch {
@@ -112,7 +112,7 @@ export class MoviesService {
         MovieLightResponseDto,
         await this.moviesRepository.find({
           where: { saga: { id: sagaId } },
-          select: ['id', 'title', 'image_name'],
+          select: ['id', 'title', 'image_name', 'synopsis'],
         }),
       );
     } catch {
@@ -128,7 +128,12 @@ export class MoviesService {
         MovieLightResponseDto,
         await this.moviesRepository
           .createQueryBuilder('movie')
-          .select(['movie.id', 'movie.title', 'movie.image_name'])
+          .select([
+            'movie.id',
+            'movie.title',
+            'movie.image_name',
+            'movie.synopsis',
+          ])
           .orderBy('RAND()')
           .limit(number)
           .getMany(),
@@ -259,7 +264,6 @@ export class MoviesService {
       movie.profils.push(profil);
       await this.moviesRepository.save(movie);
     } catch (error) {
-      console.log(error);
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(
         'Erreur serveur, veuillez réessayer',

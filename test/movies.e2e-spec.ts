@@ -416,7 +416,6 @@ describe('Movies', () => {
     it('should return all movies with status 200', async () => {
       const result = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -428,7 +427,6 @@ describe('Movies', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -467,7 +465,6 @@ describe('Movies', () => {
     it('should return all movies with profilId with status 200', async () => {
       const result = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -479,7 +476,6 @@ describe('Movies', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -529,7 +525,6 @@ describe('Movies', () => {
     it('should return all movies with sagaId with status 200', async () => {
       const result = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -541,7 +536,6 @@ describe('Movies', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -591,7 +585,6 @@ describe('Movies', () => {
     it('should return n random movies with status 200', async () => {
       const result = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -603,7 +596,6 @@ describe('Movies', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,

@@ -10,7 +10,7 @@ export class MovieLightResponseDto {
   @Expose()
   image_name: string;
 
-  @Exclude()
+  @Expose()
   synopsis: string;
 
   @Exclude()

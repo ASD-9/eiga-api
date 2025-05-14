@@ -209,7 +209,6 @@ describe('MoviesService', () => {
     it('should return an array of movies', async () => {
       const mockResult = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -221,7 +220,6 @@ describe('MoviesService', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -252,7 +250,6 @@ describe('MoviesService', () => {
     it('should return an array of movies', async () => {
       const mockResult = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -264,7 +261,6 @@ describe('MoviesService', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -295,7 +291,6 @@ describe('MoviesService', () => {
     it('should return an array of movies', async () => {
       const mockResult = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -307,7 +302,6 @@ describe('MoviesService', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -338,7 +332,6 @@ describe('MoviesService', () => {
     it('should return an array of a n random movies', async () => {
       const mockResult = [
         MockFactory.createMockMovie({
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
@@ -350,7 +343,6 @@ describe('MoviesService', () => {
         }),
         MockFactory.createMockMovie({
           id: 2,
-          synopsis: undefined,
           duration: undefined,
           trailer_url: undefined,
           release_date: undefined,
