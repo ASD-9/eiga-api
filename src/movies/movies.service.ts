@@ -122,6 +122,24 @@ export class MoviesService {
     }
   }
 
+  async findAllByCategory(
+    categoryId: number,
+  ): Promise<MovieLightResponseDto[]> {
+    try {
+      return plainToInstance(
+        MovieLightResponseDto,
+        await this.moviesRepository.find({
+          where: { categories: { id: categoryId } },
+          select: ['id', 'title', 'image_name', 'synopsis'],
+        }),
+      );
+    } catch {
+      throw new InternalServerErrorException(
+        'Erreur serveur, veuillez réessayer',
+      );
+    }
+  }
+
   async findRandom(number: number): Promise<MovieLightResponseDto[]> {
     try {
       return plainToInstance(
